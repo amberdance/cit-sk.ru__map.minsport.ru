@@ -1,0 +1,19 @@
+{
+  "autoload": {
+    "psr-4": {
+      "Citsk\\Controllers\\": "./citsk/application/Controllers",
+      "Citsk\\Models\\": "./citsk/application/Models",
+      "Citsk\\Models\\Structure\\": "./citsk/application/Models/Structure",
+      "Citsk\\Interfaces\\": "./citsk/application/Interfaces",
+      "Citsk\\Exceptions\\": "./citsk/application/Exceptions",
+      "Citsk\\Library\\": "./citsk/application/Library"
+    },
+    "files": [
+      "./citsk/config/environment.php",
+      "./citsk/config/database.php"
+    ]
+  },
+  "require": {
+    "firebase/php-jwt": "^5.2"
+  }
+}
