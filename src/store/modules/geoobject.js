@@ -1,6 +1,6 @@
-import commonMutations from "../commonMutations";
-import commonActions from "../commonActions";
-import { dispatch } from "../../api";
+import commonMutations from '../commonMutations'
+import commonActions from '../commonActions'
+import { dispatch } from '../../api'
 
 export default {
   namespaced: true,
@@ -9,7 +9,7 @@ export default {
     items: [],
     placemarks: [],
     categories: [],
-    properties: [],
+    properties: []
   },
 
   getters: {
@@ -17,40 +17,40 @@ export default {
     list: (state) => Object.values(state.items),
     placemarks: (state) => Object.values(state.placemarks),
     categories: (state) => Object.values(state.categories),
-    properties: (state) => Object.values(state.properties),
+    properties: (state) => Object.values(state.properties)
   },
 
   mutations: {
-    ...commonMutations,
+    ...commonMutations
   },
 
   actions: {
     ...commonActions,
 
-    async loadData({ commit }, { route, payload, state = "items" }) {
-      route = `/geoobject/${route}`;
+    async loadData ({ commit }, { route, payload, state = 'items' }) {
+      route = `/geoobject/${route}`
 
-      const responseData = await dispatch.HTTPPost({ route, payload });
+      const responseData = await dispatch.HTTPPost({ route, payload })
 
-      commit("clear", state);
+      commit('clear', state)
 
-      if (route == "/geoobject/get-categories") {
+      if (route == '/geoobject/get-categories') {
         for (const key in responseData) {
-          commit("set", { key: state, props: responseData[key] });
+          commit('set', { key: state, props: responseData[key] })
         }
 
-        return;
+        return
       }
 
       if (Array.isArray(responseData)) {
         responseData.forEach((item) => {
-          commit("set", { key: state, props: item });
-        });
+          commit('set', { key: state, props: item })
+        })
 
-        return;
+        return
       }
 
-      commit("set", { key: state, props: responseData });
-    },
-  },
-};
+      commit('set', { key: state, props: responseData })
+    }
+  }
+}

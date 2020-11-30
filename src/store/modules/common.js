@@ -1,43 +1,43 @@
-import commonMutations from "@/store/commonMutations";
-import { dispatch } from "../../api";
+import commonMutations from '@/store/commonMutations'
+import { dispatch } from '../../api'
 
 export default {
   namespaced: true,
 
   state: {
     isLoading: false,
-    publishStates: [],
+    publishStates: []
   },
 
   getters: {
     list: (state) => (key) => {
-      return Object.values(state[key]);
+      return Object.values(state[key])
     },
 
     isLoading: (state) => {
-      return state.isLoading;
-    },
+      return state.isLoading
+    }
   },
 
   mutations: {
-    isLoading(state, status = true) {
-      state.isLoading = status;
+    isLoading (state, status = true) {
+      state.isLoading = status
     },
 
-    ...commonMutations,
+    ...commonMutations
   },
 
   actions: {
-    async loadData({ commit }, { route, state, payload }) {
-      const responseData = await dispatch.HTTPPost({ route, payload });
+    async loadData ({ commit }, { route, state, payload }) {
+      const responseData = await dispatch.HTTPPost({ route, payload })
 
       if (Array.isArray(responseData)) {
         return responseData.forEach((item) => {
-          commit("set", { key: state, props: item });
-        });
+          commit('set', { key: state, props: item })
+        })
       }
 
-      commit("set", { key: state, props: responseData });
-    },
-  },
-};
+      commit('set', { key: state, props: responseData })
+    }
+  }
+}

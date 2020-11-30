@@ -110,55 +110,55 @@
 </template>
 
 <script>
-import TableManage from "@/mixins/TableManage";
-import Pagination from "@/mixins/Pagination";
+import TableManage from '@/mixins/TableManage'
+import Pagination from '@/mixins/Pagination'
 
 export default {
   mixins: [TableManage, Pagination],
 
-  data() {
+  data () {
     return {
-      entity: "geoobject",
+      entity: 'geoobject',
       filterComponent: null,
-      search: "",
-    };
+      search: ''
+    }
   },
 
   computed: {
-    geoobjects() {
-      return this.$store.getters["geoobject/list"];
+    geoobjects () {
+      return this.$store.getters['geoobject/list']
     },
 
-    displayedGeoobjects() {
-      return this.paginate(this.geoobjects);
+    displayedGeoobjects () {
+      return this.paginate(this.geoobjects)
     },
 
-    dataTable() {
+    dataTable () {
       return this.displayedGeoobjects.filter((item) => {
         return (
           !this.search ||
           item.label.toLowerCase().includes(this.search.toLowerCase()) ||
           item.districtLabel.toLowerCase().includes(this.search.toLowerCase())
-        );
-      });
-    },
-  },
-
-  async created() {
-    try {
-      this.$isLoading();
-
-      await this.$store.dispatch("geoobject/loadData", {
-        route: "get-list",
-      });
-
-      this.filterComponent = () =>
-        import("@/components/admin/common/EntityListFilter");
-    } catch (e) {
-      return;
-    } finally {
-      this.$isLoading(false);
+        )
+      })
     }
   },
-};
+
+  async created () {
+    try {
+      this.$isLoading()
+
+      await this.$store.dispatch('geoobject/loadData', {
+        route: 'get-list'
+      })
+
+      this.filterComponent = () =>
+        import('@/components/admin/common/EntityListFilter')
+    } catch (e) {
+      return
+    } finally {
+      this.$isLoading(false)
+    }
+  }
+}
 </script>

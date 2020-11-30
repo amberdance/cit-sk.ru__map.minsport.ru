@@ -1,25 +1,25 @@
-import Vue from "vue";
+import Vue from 'vue'
 
 export default {
-  set(state, { key, props }) {
-    Vue.set(state[key], props.id, props);
+  set (state, { key, props }) {
+    Vue.set(state[key], props.id, props)
   },
 
-  clear(state, key) {
-    state[key] = {};
+  clear (state, key) {
+    state[key] = {}
   },
 
-  update(state, { key, props }) {
-    for (let prop in props) {
-      Vue.set(state[key][props.id], prop, props[prop]);
+  update (state, { key, props }) {
+    for (const prop in props) {
+      Vue.set(state[key][props.id], prop, props[prop])
     }
   },
 
-  remove(state, { key, id }) {
-    Vue.delete(state[key], id);
+  remove (state, { key, id }) {
+    Vue.delete(state[key], id)
   },
 
-  setFilter(state, payload) {
-    state.items = payload;
-  },
-};
+  setFilter (state, payload) {
+    state.items = payload
+  }
+}

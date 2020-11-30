@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 <template>
   <div class="map-control-wrapper">
     <div class="sub-heading a-center" style="font-size:15px;">
@@ -118,25 +119,25 @@
 </template>
 
 <script>
-import YandexMapManage from "@/mixins/map/YandexMapManage";
-import { removeEmptyFields, throttle } from "@/utils/common";
-
+import YandexMapManage from '@/mixins/map/YandexMapManage'
+import { removeEmptyFields, throttle } from '@/utils/common'
 export default {
+
   mixins: [YandexMapManage],
 
   props: {
     yandexMapInstance: {
       type: Object,
-      required: true,
+      required: true
     },
 
     clusterer: {
       type: Object,
-      required: true,
-    },
+      required: true
+    }
   },
 
-  data() {
+  data () {
     return {
       geoobjectId: null,
       isSomethingChanged: false,
@@ -147,141 +148,146 @@ export default {
       switcher: {
         isAnytime: false,
         ifFree: false,
-        isInvalid: false,
+        isInvalid: false
       },
 
       filter: {
         districts: [],
         minAge: null,
         price: null,
-        category: {},
-      },
-    };
+        category: {}
+      }
+    }
   },
 
   computed: {
-    categories() {
-      return this.$store.getters["geoobject/categories"];
+    categories () {
+      return this.$store.getters['geoobject/categories']
     },
 
-    placemarks() {
-      return this.$store.getters["geoobject/placemarks"];
+    placemarks () {
+      return this.$store.getters['geoobject/placemarks']
     },
 
-    districts() {
-      return this.$store.getters["district/list"];
-    },
+    districts () {
+      return this.$store.getters['district/list']
+    }
   },
 
-  async created() {
+  async created () {
     try {
-      this.$isLoading();
+      this.$isLoading()
 
-      await this.$store.dispatch("geoobject/loadData", {
-        route: "get-categories",
-        state: "categories",
-      });
+      await this.$store.dispatch('geoobject/loadData', {
+        route: 'get-categories',
+        state: 'categories'
+      })
     } catch (e) {
-      return;
+      return
     } finally {
-      this.$isLoading(false);
+      this.$isLoading(false)
     }
   },
 
   methods: {
-    changeFilter: throttle(function(isSliderHere = null) {
-      this.setFilter(isSliderHere);
+    changeFilter: throttle(function (isSliderHere = null) {
+      this.setFilter(isSliderHere)
     }, 1200),
 
-    async setFilter(isSliderHere) {
-      if (!this.placemarks.length) return;
+    async setFilter (isSliderHere) {
+      // if (!this.placemarks.length) {
+      //   this.clusterer.removeAll();
+      //   this.placemarksCollection = [];
 
-      this.hideMultiRoute();
+      //   return;
+      // }
+
+      console.log(this.placemarksCollection)
+
+      this.$isLoading()
+      this.hideMultiRoute()
+
+      this.isSomethingChanged = true
+
+      if (isSliderHere) {
+        this.sliders[isSliderHere] = true
+      }
+
+      const payload = this.getPayloadData()
 
       try {
-        this.$isLoading();
-
-        this.isSomethingChanged = true;
-
-        if (isSliderHere) {
-          this.sliders[isSliderHere] = true;
-        }
-
-        let payload = this.getPayloadData();
-
-        await this.loadGeoobjects(payload);
-        this.setBounds();
+        await this.loadGeoobjects(payload)
+        this.setBounds()
       } catch (e) {
-        if (e == "Unhandled data") return this.$onWarning("Ничего не найдено");
+        if (e === 'Unhandled data') return this.$onWarning('Ничего не найдено')
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
     },
 
-    async loadGeoobjects(payload = null) {
-      this.clusterer.removeAll();
-      this.placemarksCollection = [];
+    async loadGeoobjects (payload = null) {
+      this.clusterer.removeAll()
+      this.placemarksCollection = []
 
-      await this.loadPlacemarks(payload);
+      await this.loadPlacemarks(payload)
 
-      this.setPlacemarks(ymaps);
+      this.setPlacemarks(ymaps)
     },
 
-    getPayloadData() {
-      let payload = {
+    getPayloadData () {
+      const payload = {
         districts: this.filter.districts,
         category: [],
         switcher: {},
-        slider: {},
-      };
+        slider: {}
+      }
 
       for (const key in this.sliders) {
-        if (this.sliders[key]) payload.slider[key] = this.filter[key];
+        if (this.sliders[key]) payload.slider[key] = this.filter[key]
       }
 
       for (const key in this.switcher) {
-        if (this.switcher[key]) payload.switcher[key] = this.switcher[key];
+        if (this.switcher[key]) payload.switcher[key] = this.switcher[key]
       }
 
       for (const key in this.filter.category) {
         this.filter.category[key].forEach((item) => {
-          payload.category.push(item);
-        });
+          payload.category.push(item)
+        })
       }
 
-      if (payload.category.length >= 6)
-        return this.$onWarning("Уменьшите критерии поиска по категориям");
+      if (payload.category.length >= 6) { return this.$onWarning('Уменьшите критерии поиска по категориям') }
 
-      if (payload.slider.minAge == 1) delete payload.slider.minAge;
-      if (payload.slider.price == 0) delete payload.slider.price;
+      if (payload.slider.minAge === 1) delete payload.slider.minAge
+      if (payload.slider.price === 0) delete payload.slider.price
 
-      return removeEmptyFields(payload);
+      return removeEmptyFields(payload)
     },
 
-    hideMultiRoute() {
-      this.clusterer.options.set("visible", true).set("geoObjectVisible", true);
+    hideMultiRoute () {
+      this.clusterer.options.set('visible', true).set('geoObjectVisible', true)
     },
 
-    async resetFilter() {
-      this.filter.price = 0;
-      this.filter.minAge = 1;
-      this.filter.districts = [];
+    async resetFilter () {
+      this.filter.price = 0
+      this.filter.minAge = 1
+      this.filter.districts = []
 
-      this.filter.category = {};
-      this.sliders = {};
+      this.filter.category = {}
+      this.sliders = {}
 
-      this.switcher.isInvalid = false;
-      this.switcher.isFree = false;
-      this.switcher.isAnytime = false;
+      this.switcher.isInvalid = false
+      this.switcher.isFree = false
+      this.switcher.isAnytime = false
 
-      this.isSomethingChanged = false;
+      this.isSomethingChanged = false
 
-      this.hideMultiRoute();
+      this.hideMultiRoute()
 
-      this.yandexMapInstance.setZoom(9);
+      this.yandexMapInstance.setZoom(9)
 
-      await this.loadGeoobjects();
-    },
-  },
-};
+      await this.loadGeoobjects()
+    }
+  }
+}
 </script>

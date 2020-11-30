@@ -54,67 +54,67 @@
 </template>
 
 <script>
-import Youtube from "@/components/common/Youtube";
-import { getIdFromUrl } from "vue-youtube";
+import Youtube from '@/components/common/Youtube'
+import { getIdFromUrl } from 'vue-youtube'
 
 export default {
   props: {
-    isUpdatePage: { type: Boolean, required: false },
+    isUpdatePage: { type: Boolean, required: false }
   },
 
   components: { Youtube },
 
-  data() {
+  data () {
     return {
       inputsCount: 1,
-      videogallery: [],
-    };
+      videogallery: []
+    }
   },
 
   computed: {
-    videoInputs() {
-      return this.inputsCount;
-    },
+    videoInputs () {
+      return this.inputsCount
+    }
   },
 
-  created() {
-    this.videogallery = this.$route.params.videogallery || [];
-    this.inputsCount = this.videogallery.length || 1;
+  created () {
+    this.videogallery = this.$route.params.videogallery || []
+    this.inputsCount = this.videogallery.length || 1
   },
 
   methods: {
-    increment() {
-      this.inputsCount++;
-      this.videogallery.push(null);
+    increment () {
+      this.inputsCount++
+      this.videogallery.push(null)
     },
 
-    decrement(index) {
-      delete this.videogallery[index];
-      this.inputsCount--;
-      if (!this.inputsCount) this.inputsCount = 1;
+    decrement (index) {
+      delete this.videogallery[index]
+      this.inputsCount--
+      if (!this.inputsCount) this.inputsCount = 1
     },
 
-    detachYoutube(videoId, index) {
-      this.videogallery = this.videogallery.filter((id, i) => i !== index);
-      this.inputsCount--;
-      if (!this.inputsCount) this.inputsCount = 1;
+    detachYoutube (videoId, index) {
+      this.videogallery = this.videogallery.filter((id, i) => i !== index)
+      this.inputsCount--
+      if (!this.inputsCount) this.inputsCount = 1
     },
 
-    getVideos() {
-      let result = this.videogallery;
+    getVideos () {
+      const result = this.videogallery
 
       this.videogallery.forEach((item) => {
-        const videoId = getIdFromUrl(item);
-        if (videoId) result.push(videoId);
-      });
+        const videoId = getIdFromUrl(item)
+        if (videoId) result.push(videoId)
+      })
 
-      return result.filter((src) => src.indexOf("https")).length || null;
+      return result.filter((src) => src.indexOf('https')).length || null
     },
 
-    resetFields() {
-      this.inputsCount = 1;
-      this.videogallery = [];
-    },
-  },
-};
+    resetFields () {
+      this.inputsCount = 1
+      this.videogallery = []
+    }
+  }
+}
 </script>

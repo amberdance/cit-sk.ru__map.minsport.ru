@@ -23,8 +23,8 @@
 </template>
 
 <script>
-import HomePageManage from "@/mixins/HomePageManage";
+import HomePageManage from '@/mixins/HomePageManage'
 export default {
-  mixins: [HomePageManage],
-};
+  mixins: [HomePageManage]
+}
 </script>

@@ -17,15 +17,15 @@
 </template>
 
 <script>
-import AdminMenu from "@/components/admin/common/AdminMenu";
-import MainLayout from "@/components/layouts/MainLayout";
+import AdminMenu from '@/components/admin/common/AdminMenu'
+import MainLayout from '@/components/layouts/MainLayout'
 
 export default {
   components: {
     MainLayout,
-    AdminMenu,
-  },
-};
+    AdminMenu
+  }
+}
 </script>
 <style module>
 .adminMenuWrapper {

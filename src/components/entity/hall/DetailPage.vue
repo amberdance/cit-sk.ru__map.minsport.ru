@@ -60,43 +60,43 @@
 </template>
 
 <script>
-import MainLayout from "@/components/layouts/MainLayout";
-import DetailedProperties from "@/components/common/DetailedProperties";
-import Youtube from "@/components/common/Youtube";
-import Photogallery from "@/components/common/Photogallery";
+import MainLayout from '@/components/layouts/MainLayout'
+import DetailedProperties from '@/components/common/DetailedProperties'
+import Youtube from '@/components/common/Youtube'
+import Photogallery from '@/components/common/Photogallery'
 
 export default {
   components: { DetailedProperties, Photogallery, Youtube, MainLayout },
 
-  data() {
+  data () {
     return {
       previewImage: null,
 
       hall: {
         videogallery: [],
-        photogallery: [],
-      },
-    };
+        photogallery: []
+      }
+    }
   },
 
-  async created() {
+  async created () {
     try {
-      this.$isLoading();
+      this.$isLoading()
 
       this.hall = await this.$HTTPGet({
-        route: "/hall/get-list",
-        payload: { id: this.$route.query.id },
-      });
+        route: '/hall/get-list',
+        payload: { id: this.$route.query.id }
+      })
 
       this.previewImage = this.hall.previewImage.length
         ? this.hall.previewImage[0].src
-        : null;
+        : null
     } catch (e) {
-      this.$onError();
-      return;
+      this.$onError()
+      return
     } finally {
-      this.$isLoading(false);
+      this.$isLoading(false)
     }
-  },
-};
+  }
+}
 </script>

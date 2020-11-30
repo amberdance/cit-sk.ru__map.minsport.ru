@@ -5,31 +5,31 @@
 </template>
 
 <script>
-import MainLayout from "@/components/layouts/MainLayout";
+import MainLayout from '@/components/layouts/MainLayout'
 
 export default {
   components: { MainLayout },
 
-  data() {
+  data () {
     return {
-      homeComponent: null,
-    };
+      homeComponent: null
+    }
   },
 
   computed: {
-    clientWidth() {
-      return document.documentElement.clientWidth;
+    clientWidth () {
+      return document.documentElement.clientWidth
     },
 
-    isDevice() {
-      return this.clientWidth <= 760;
-    },
+    isDevice () {
+      return this.clientWidth <= 760
+    }
   },
 
-  created() {
+  created () {
     this.homeComponent = this.isDevice
-      ? () => import("./DeviceView")
-      : () => import("./DesktopView");
-  },
-};
+      ? () => import('./DeviceView')
+      : () => import('./DesktopView')
+  }
+}
 </script>

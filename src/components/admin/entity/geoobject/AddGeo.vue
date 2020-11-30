@@ -74,79 +74,77 @@
   </div>
 </template>
 <script>
-import YandexMapInit from "@/mixins/map/YandexMapInit";
-import YandexMapManage from "@/mixins/map/YandexMapManage";
-import EntityManage from "@/mixins/admin/EntityManage";
-import GeoobjectManage from "@/mixins/admin/GeoobjectManage";
-import EntityPhoto from "@/components/admin/common/EntityPhoto";
-import EntityVideo from "@/components/admin/common/EntityVideo";
+import YandexMapInit from '@/mixins/map/YandexMapInit'
+import YandexMapManage from '@/mixins/map/YandexMapManage'
+import EntityManage from '@/mixins/admin/EntityManage'
+import GeoobjectManage from '@/mixins/admin/GeoobjectManage'
+import EntityPhoto from '@/components/admin/common/EntityPhoto'
+import EntityVideo from '@/components/admin/common/EntityVideo'
 
 export default {
   components: { EntityPhoto, EntityVideo },
 
   mixins: [YandexMapInit, YandexMapManage, EntityManage, GeoobjectManage],
 
-  data() {
+  data () {
     return {
-      entity: "geoobject",
+      entity: 'geoobject',
       propertiesComponent: null,
 
       geoobject: {
         label: null,
         coords: null,
         categories: {},
-        properties: {},
-      },
-    };
+        properties: {}
+      }
+    }
   },
 
-  async created() {
-    await this.initializeYandexMap();
+  async created () {
+    await this.initializeYandexMap()
 
     this.propertiesComponent = () =>
-      import("@/components/admin/common/EntityProperties");
+      import('@/components/admin/common/EntityProperties')
   },
 
   methods: {
-    async addGeoobject() {
+    async addGeoobject () {
       try {
-        this.$isLoading();
+        this.$isLoading()
 
-        this.geoobject.properties = this.$refs.entityProperties.getFields();
-        this.geoobject.properties.videogallery = this.$refs.entityVideo.getVideos();
+        this.geoobject.properties = this.$refs.entityProperties.getFields()
+        this.geoobject.properties.videogallery = this.$refs.entityVideo.getVideos()
 
-        if (!this.geoobject.properties.videogallery)
-          delete this.geoobject.properties.videogallery;
+        if (!this.geoobject.properties.videogallery) { delete this.geoobject.properties.videogallery }
 
         const { data } = await this.$HTTPPost({
-          route: "/geoobject/add",
+          route: '/geoobject/add',
           payload: {
             ...this.geoobject,
-            categories: this.mergeCategories(),
-          },
-        });
+            categories: this.mergeCategories()
+          }
+        })
 
-        this.uploadPhotos(data.id);
+        this.uploadPhotos(data.id)
 
-        this.purge();
-        this.$onSuccess("Объект добавлен");
+        this.purge()
+        this.$onSuccess('Объект добавлен')
       } catch (e) {
-        if (e.code == 102)
-          return this.$onWarning("Объект с таким названием уже существует");
+        if (e.code === 102) { return this.$onWarning('Объект с таким названием уже существует') }
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
     },
 
-    purge() {
-      this.geoobject.label = null;
-      this.geoobject.categories = {};
-      this.geoobject.properties = {};
-      this.$refs.entityVideo.resetFields();
-      this.$refs.entityProperties.resetFields();
-      this.$refs.form.resetFields();
-      this.yandexMapInstance.geoObjects.remove(this.placemark);
-    },
-  },
-};
+    purge () {
+      this.geoobject.label = null
+      this.geoobject.categories = {}
+      this.geoobject.properties = {}
+      this.$refs.entityVideo.resetFields()
+      this.$refs.entityProperties.resetFields()
+      this.$refs.form.resetFields()
+      this.yandexMapInstance.geoObjects.remove(this.placemark)
+    }
+  }
+}
 </script>

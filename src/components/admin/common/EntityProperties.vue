@@ -61,90 +61,90 @@
   </div>
 </template>
 <script>
-import { removeEmptyFields, isEmptyObject } from "@/utils/common";
+import { removeEmptyFields } from '@/utils/common'
 export default {
   props: {
     params: { type: Object, required: true },
-    entity: { type: String, required: true },
+    entity: { type: String, required: true }
   },
 
-  data() {
+  data () {
     return {
       properties: {},
 
       ownership: [
         {
           id: 1,
-          label: "Муниципальная",
+          label: 'Муниципальная'
         },
         {
           id: 2,
-          label: "Частная",
+          label: 'Частная'
         },
         {
           id: 3,
-          label: "Государственная",
-        },
-      ],
-    };
+          label: 'Государственная'
+        }
+      ]
+    }
   },
 
   computed: {
-    globalProperties() {
-      return this.$store.getters[`${this.entity}/get`]("properties")[0];
-    },
+    globalProperties () {
+      return this.$store.getters[`${this.entity}/get`]('properties')[0]
+    }
   },
 
-  async created() {
-    await this.getProperties();
+  async created () {
+    await this.getProperties()
 
-    this.properties = this.params;
+    this.properties = this.params
   },
 
   methods: {
-    async getProperties() {
+    async getProperties () {
       try {
         await this.$store.dispatch(`${this.entity}/loadData`, {
-          route: "get-properties",
-          state: "properties",
-        });
+          route: 'get-properties',
+          state: 'properties'
+        })
       } catch (e) {
-        return;
+
       }
     },
 
-    getDisabled(propertyCode) {
-      if (propertyCode == "duration" || propertyCode == "distance") return true;
+    getDisabled (propertyCode) {
+      if (propertyCode === 'duration' || propertyCode === 'distance') return true
     },
 
-    getUpdateFields() {
-      return this.properties;
+    getUpdateFields () {
+      return this.properties
     },
 
-    setUpdateFields() {
+    setUpdateFields () {
       if (this.$route.params.properties.length) {
         this.$route.params.properties.forEach((item) => {
-          this.properties[item.code] = item.value;
-        });
+          this.properties[item.code] = item.value
+        })
       }
     },
 
-    setDefaultValue(property) {
-      if (property.value == null) property.value = "";
-      if (property.value == 0) property.value = 1;
+    setDefaultValue (property) {
+      if (property.value == null) property.value = ''
+      if (property.value === 0) property.value = 1
 
-      return property;
+      return property
     },
 
-    getFields() {
-      return removeEmptyFields(this.properties);
+    getFields () {
+      return removeEmptyFields(this.properties)
     },
 
-    resetFields() {
-      this.properties = {};
-    },
-  },
-};
+    resetFields () {
+      this.properties = {}
+    }
+  }
+}
 </script>
 <style module>
 .flexBox {

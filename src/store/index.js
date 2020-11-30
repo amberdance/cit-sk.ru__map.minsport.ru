@@ -1,12 +1,12 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import common from "./modules/common";
-import geoobject from "./modules/geoobject";
-import hall from "./modules/hall";
-import route from "./modules/route";
-import district from "./modules/district";
+import Vue from 'vue'
+import Vuex from 'vuex'
+import common from './modules/common'
+import geoobject from './modules/geoobject'
+import hall from './modules/hall'
+import route from './modules/route'
+import district from './modules/district'
 
-Vue.use(Vuex);
+Vue.use(Vuex)
 
 export default new Vuex.Store({
   modules: {
@@ -14,6 +14,6 @@ export default new Vuex.Store({
     district,
     geoobject,
     hall,
-    route,
-  },
-});
+    route
+  }
+})

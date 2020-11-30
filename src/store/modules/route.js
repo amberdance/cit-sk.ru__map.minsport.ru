@@ -1,51 +1,51 @@
-import commonMutations from "../commonMutations";
-import commonActions from "../commonActions";
-import { dispatch } from "../../api";
+import commonMutations from '../commonMutations'
+import commonActions from '../commonActions'
+import { dispatch } from '../../api'
 
 export default {
   namespaced: true,
 
   state: {
     items: {},
-    properties: {},
+    properties: {}
   },
 
   getters: {
     get: (state) => (key) => {
-      return Object.values(state[key]);
+      return Object.values(state[key])
     },
 
     list: (state) => {
-      return Object.values(state.items);
+      return Object.values(state.items)
     },
 
     properties: (state) => {
-      return Object.values(state.properties);
-    },
+      return Object.values(state.properties)
+    }
   },
 
   mutations: {
-    ...commonMutations,
+    ...commonMutations
   },
 
   actions: {
     ...commonActions,
 
-    async loadData({ commit }, { route, payload, state = "items" }) {
-      route = `/route/${route}`;
-      const responseData = await dispatch.HTTPPost({ route, payload });
+    async loadData ({ commit }, { route, payload, state = 'items' }) {
+      route = `/route/${route}`
+      const responseData = await dispatch.HTTPPost({ route, payload })
 
-      commit("clear", state);
+      commit('clear', state)
 
       if (Array.isArray(responseData)) {
         responseData.forEach((item) => {
-          commit("set", { key: state, props: item });
-        });
+          commit('set', { key: state, props: item })
+        })
 
-        return;
+        return
       }
 
-      commit("set", { key: state, props: responseData });
-    },
-  },
-};
+      commit('set', { key: state, props: responseData })
+    }
+  }
+}

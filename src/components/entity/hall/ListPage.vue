@@ -42,42 +42,41 @@
 export default {
   props: {
     geoId: {
-      requried: true,
-    },
+      requried: true
+    }
   },
 
-  data() {
+  data () {
     return {
-      halls: {},
-    };
+      halls: {}
+    }
   },
 
-  async created() {
+  async created () {
     try {
-      this.$isLoading();
+      this.$isLoading()
 
-      halls = await this.$HTTPGet({
-        route: "/hall/get-list",
-        payload: { id: this.geoId },
-      });
+      const halls = await this.$HTTPGet({
+        route: '/hall/get-list',
+        payload: { id: this.geoId }
+      })
 
-      if (!halls) this.halls = [];
-
-      if (!Array.isArray(halls)) this.halls = [halls];
+      if (!halls) this.halls = []
+      if (!Array.isArray(halls)) this.halls = [halls]
     } catch (e) {
-      return;
+      return
     } finally {
-      this.$isLoading(false);
+      this.$isLoading(false)
     }
   },
 
   methods: {
-    getHallById(id) {
+    getHallById (id) {
       this.$router.push({
-        name: "hallDetail",
-        query: { id },
-      });
-    },
-  },
-};
+        name: 'hallDetail',
+        query: { id }
+      })
+    }
+  }
+}
 </script>

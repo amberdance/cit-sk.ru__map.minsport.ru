@@ -108,55 +108,55 @@
   </el-row>
 </template>
 <script>
-import TableManage from "@/mixins/TableManage";
-import Pagination from "@/mixins/Pagination";
+import TableManage from '@/mixins/TableManage'
+import Pagination from '@/mixins/Pagination'
 
 export default {
   mixins: [TableManage, Pagination],
 
-  data() {
+  data () {
     return {
-      entity: "route",
+      entity: 'route',
       filterComponent: null,
-      search: "",
-    };
+      search: ''
+    }
   },
 
   computed: {
-    routes() {
-      return this.$store.getters["route/list"];
+    routes () {
+      return this.$store.getters['route/list']
     },
 
-    displayedRoutes() {
-      return this.paginate(this.routes);
+    displayedRoutes () {
+      return this.paginate(this.routes)
     },
 
-    dataTable() {
+    dataTable () {
       return this.displayedRoutes.filter((row) => {
         return (
           !this.search ||
           row.created.toLowerCase().includes(this.search.toLowerCase()) ||
           row.label.toLowerCase().includes(this.search.toLowerCase())
-        );
-      });
-    },
-  },
-
-  async created() {
-    try {
-      this.$isLoading();
-
-      await this.$store.dispatch("route/loadData", {
-        route: "get-list",
-      });
-
-      this.filterComponent = () =>
-        import("@/components/admin/common/EntityListFilter");
-    } catch (e) {
-      return;
-    } finally {
-      this.$isLoading(false);
+        )
+      })
     }
   },
-};
+
+  async created () {
+    try {
+      this.$isLoading()
+
+      await this.$store.dispatch('route/loadData', {
+        route: 'get-list'
+      })
+
+      this.filterComponent = () =>
+        import('@/components/admin/common/EntityListFilter')
+    } catch (e) {
+      return
+    } finally {
+      this.$isLoading(false)
+    }
+  }
+}
 </script>

@@ -39,55 +39,53 @@
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       isLoading: false,
 
       formData: {
-        login: "",
-        password: "",
+        login: '',
+        password: ''
       },
 
       formRules: {
         login: [
           {
             required: true,
-            message: " ",
-          },
+            message: ' '
+          }
         ],
 
         password: [
           {
             required: true,
-            message: " ",
-          },
-        ],
-      },
-    };
+            message: ' '
+          }
+        ]
+      }
+    }
   },
 
   methods: {
-    async authorize() {
-      await this.$refs.form.validate();
+    async authorize () {
+      await this.$refs.form.validate()
 
       try {
-        this.isLoading = true;
-        await this.$logIn(this.formData);
-        this.$router.push("/admin");
+        this.isLoading = true
+        await this.$logIn(this.formData)
+        this.$router.push('/admin')
       } catch (e) {
-        if (e == "Bad request") return this.$onError();
+        if (e === 'Bad request') return this.$onError()
 
-        if (e.config.response.status == 401)
-          return this.$onError("Все - таки что - то неверно");
+        if (e.config.response.status === 401) { return this.$onError('Все - таки что - то неверно') }
 
-        if (e.config.response.status == 403)
-          return this.$onError("Доступ запрещен");
+        if (e.config.response.status === 403) { return this.$onError('Доступ запрещен') }
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
 <style module>

@@ -26,8 +26,8 @@ export default {
     properties: {
       type: Array,
       required: false,
-      default: null,
-    },
-  },
-};
+      default: null
+    }
+  }
+}
 </script>

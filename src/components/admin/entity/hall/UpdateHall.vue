@@ -72,19 +72,19 @@
 </template>
 
 <script>
-import EntityManage from "@/mixins/admin/EntityManage";
-import HallManage from "@/mixins/admin/HallManage";
-import EntityPhoto from "@/components/admin/common/EntityPhoto";
-import EntityVideo from "@/components/admin/common/EntityVideo";
-import { isEmptyObject } from "@/utils/common";
+import EntityManage from '@/mixins/admin/EntityManage'
+import HallManage from '@/mixins/admin/HallManage'
+import EntityPhoto from '@/components/admin/common/EntityPhoto'
+import EntityVideo from '@/components/admin/common/EntityVideo'
+import { isEmptyObject } from '@/utils/common'
 
 export default {
   components: { EntityPhoto, EntityVideo },
   mixins: [EntityManage, HallManage],
 
-  data() {
+  data () {
     return {
-      entity: "hall",
+      entity: 'hall',
       propertiesComponent: null,
 
       hall: {
@@ -94,55 +94,53 @@ export default {
         created: null,
         published: null,
         stateLabel: null,
-        properties: {},
-      },
-    };
+        properties: {}
+      }
+    }
   },
 
-  created() {
-    if (isEmptyObject(this.$route.params))
-      return this.$router.push("/hall/list");
+  created () {
+    if (isEmptyObject(this.$route.params)) { return this.$router.push('/hall/list') }
 
-    const hall = this.hall,
-      params = this.$route.params;
+    const hall = this.hall
+    const params = this.$route.params
 
-    hall.id = params.id;
-    hall.geoId = params.geoId;
-    hall.label = params.label;
-    hall.stateLabel = params.stateLabel;
-    hall.created = params.created;
-    hall.published = params.published;
-    hall.deleted = params.deleted;
+    hall.id = params.id
+    hall.geoId = params.geoId
+    hall.label = params.label
+    hall.stateLabel = params.stateLabel
+    hall.created = params.created
+    hall.published = params.published
+    hall.deleted = params.deleted
 
-    this.initializeUpdateProperties("hall");
+    this.initializeUpdateProperties('hall')
     this.propertiesComponent = () =>
-      import("@/components/admin/common/EntityProperties");
+      import('@/components/admin/common/EntityProperties')
   },
 
   methods: {
-    async updateHall() {
+    async updateHall () {
       try {
-        this.$isLoading();
+        this.$isLoading()
 
-        this.hall.properties = this.$refs.entityProperties.getUpdateFields();
-        this.hall.properties.videogallery = this.$refs.entityVideo.getVideos();
+        this.hall.properties = this.$refs.entityProperties.getUpdateFields()
+        this.hall.properties.videogallery = this.$refs.entityVideo.getVideos()
 
-        if (!this.hall.properties.videogallery)
-          delete this.hall.properties.videogallery;
+        if (!this.hall.properties.videogallery) { delete this.hall.properties.videogallery }
 
-        await this.$store.dispatch("hall/update", {
-          route: "/hall/update-hall",
-          payload: this.hall,
-        });
+        await this.$store.dispatch('hall/update', {
+          route: '/hall/update-hall',
+          payload: this.hall
+        })
 
-        this.uploadPhotos(this.hall.id);
-        this.$onSuccess("Зал обновлен");
+        this.uploadPhotos(this.hall.id)
+        this.$onSuccess('Зал обновлен')
       } catch (e) {
-        return;
+        return
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

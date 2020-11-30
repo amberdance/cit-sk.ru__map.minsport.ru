@@ -85,26 +85,24 @@
 </template>
 
 <script>
-import MainLayout from "@/components/layouts/MainLayout";
-import DetailedProperties from "@/components/common/DetailedProperties";
-import Youtube from "@/components/common/Youtube";
-import Photogallery from "@/components/common/Photogallery";
-import RouteManage from "@/mixins/admin/RouteManage";
-import YandexMapInit from "@/mixins/map/YandexMapInit";
-import MultiRouteMange from "@/mixins/map/MultiRouteMange";
-import YandexMapManage from "@/mixins/map/YandexMapManage";
+import MainLayout from '@/components/layouts/MainLayout'
+import DetailedProperties from '@/components/common/DetailedProperties'
+import Youtube from '@/components/common/Youtube'
+import Photogallery from '@/components/common/Photogallery'
+import YandexMapInit from '@/mixins/map/YandexMapInit'
+import MultiRouteMange from '@/mixins/map/MultiRouteMange'
 
 export default {
   components: {
     MainLayout,
     DetailedProperties,
     Photogallery,
-    Youtube,
+    Youtube
   },
 
   mixins: [YandexMapInit, MultiRouteMange],
 
-  data() {
+  data () {
     return {
       routeId: null,
       previewImage: null,
@@ -114,40 +112,40 @@ export default {
 
       route: {
         videogallery: [],
-        photogallery: [],
-      },
-    };
+        photogallery: []
+      }
+    }
   },
 
-  async created() {
+  async created () {
     try {
-      this.$isLoading();
+      this.$isLoading()
 
-      await this.loadYandexMap();
-      await this.initializeYmap();
+      await this.loadYandexMap()
+      await this.initializeYmap()
 
-      this.routeId = this.$route.params.id || this.$route.query.id;
+      this.routeId = this.$route.params.id || this.$route.query.id
 
       const route = await this.$HTTPGet({
-        route: "/route/get-list",
-        payload: { id: this.routeId },
-      });
+        route: '/route/get-list',
+        payload: { id: this.routeId }
+      })
 
-      this.route = route;
+      this.route = route
       this.routingMode =
-        route.routingMode == "bicycle" ? "велосипедный" : "пешеходный";
+        route.routingMode === 'bicycle' ? 'велосипедный' : 'пешеходный'
 
       this.previewImage = this.route.previewImage.length
         ? this.route.previewImage[0].src
-        : null;
+        : null
 
-      this.multiRouteInit();
-      this.caloriesComponent = () => import("./CaloriesCalculator");
+      this.multiRouteInit()
+      this.caloriesComponent = () => import('./CaloriesCalculator')
     } catch (e) {
-      return;
+      return
     } finally {
-      this.$isLoading(false);
+      this.$isLoading(false)
     }
-  },
-};
+  }
+}
 </script>

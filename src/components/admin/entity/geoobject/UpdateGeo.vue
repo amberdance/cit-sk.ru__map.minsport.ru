@@ -93,23 +93,23 @@
   </div>
 </template>
 <script>
-import YandexMapInit from "@/mixins/map/YandexMapInit";
-import YandexMapManage from "@/mixins/map/YandexMapManage";
-import EntityManage from "@/mixins/admin/EntityManage";
-import GeoobjectManage from "@/mixins/admin/GeoobjectManage";
-import EntityPhoto from "@/components/admin/common/EntityPhoto";
-import EntityVideo from "@/components/admin/common/EntityVideo";
+import YandexMapInit from '@/mixins/map/YandexMapInit'
+import YandexMapManage from '@/mixins/map/YandexMapManage'
+import EntityManage from '@/mixins/admin/EntityManage'
+import GeoobjectManage from '@/mixins/admin/GeoobjectManage'
+import EntityPhoto from '@/components/admin/common/EntityPhoto'
+import EntityVideo from '@/components/admin/common/EntityVideo'
 
-import { isEmptyObject } from "@/utils/common";
+import { isEmptyObject } from '@/utils/common'
 
 export default {
   components: { EntityPhoto, EntityVideo },
 
   mixins: [YandexMapInit, YandexMapManage, EntityManage, GeoobjectManage],
 
-  data() {
+  data () {
     return {
-      entity: "geoobject",
+      entity: 'geoobject',
       propertiesComponent: null,
       isDataChanged: false,
       properties: {},
@@ -123,86 +123,82 @@ export default {
         stateLabel: null,
         deleted: null,
         categories: {},
-        properties: {},
-      },
-    };
+        properties: {}
+      }
+    }
   },
 
-  async created() {
+  async created () {
     try {
-      if (isEmptyObject(this.$route.params))
-        return this.$router.push("/admin/geo-list");
+      if (isEmptyObject(this.$route.params)) { return this.$router.push('/admin/geo-list') }
 
-      await this.initializeYandexMap();
+      await this.initializeYandexMap()
 
-      this.initializeUpdateFields();
-      this.initializeYmapsPlacemark();
+      this.initializeUpdateFields()
+      this.initializeYmapsPlacemark()
     } catch (e) {
-      return;
+
     }
   },
 
   methods: {
-    initializeUpdateFields() {
-      const geo = this.geoobject,
-        params = this.$route.params;
+    initializeUpdateFields () {
+      const geo = this.geoobject
+      const params = this.$route.params
 
-      geo.id = params.id;
-      geo.label = params.label;
-      geo.coords = params.coords;
-      geo.stateLabel = params.stateLabel;
-      geo.created = params.created;
-      geo.published = params.published;
-      geo.deleted = params.deleted;
+      geo.id = params.id
+      geo.label = params.label
+      geo.coords = params.coords
+      geo.stateLabel = params.stateLabel
+      geo.created = params.created
+      geo.published = params.published
+      geo.deleted = params.deleted
 
       params.categories.forEach((item) => {
-        geo.categories[item.code].push(Number(item.id));
-      });
+        geo.categories[item.code].push(Number(item.id))
+      })
 
-      this.initializeUpdateProperties("geoobject");
+      this.initializeUpdateProperties('geoobject')
       this.propertiesComponent = () =>
-        import("@/components/admin/common/EntityProperties");
+        import('@/components/admin/common/EntityProperties')
     },
 
-    initializeYmapsPlacemark() {
+    initializeYmapsPlacemark () {
       this.placemark = new ymaps.Placemark(this.geoobject.coords, null, {
-        preset: "islands#redSportIcon",
-        iconColor: "#3c3e4c",
-      });
+        preset: 'islands#redSportIcon',
+        iconColor: '#3c3e4c'
+      })
 
-      this.yandexMapInstance.geoObjects.add(this.placemark);
-      this.geoobject.coords = this.geoobject.coords.join(",");
+      this.yandexMapInstance.geoObjects.add(this.placemark)
+      this.geoobject.coords = this.geoobject.coords.join(',')
     },
 
-    async updateGeoobject() {
+    async updateGeoobject () {
       try {
-        this.$isLoading();
+        this.$isLoading()
 
-        this.geoobject.properties = this.$refs.entityProperties.getUpdateFields();
-        this.geoobject.properties.videogallery = this.$refs.entityVideo.getVideos();
+        this.geoobject.properties = this.$refs.entityProperties.getUpdateFields()
+        this.geoobject.properties.videogallery = this.$refs.entityVideo.getVideos()
 
-        console.log(this.geoobject.properties, this.properties);
-        if (!this.geoobject.properties.videogallery)
-          delete this.geoobject.properties.videogallery;
+        console.log(this.geoobject.properties, this.properties)
+        if (!this.geoobject.properties.videogallery) { delete this.geoobject.properties.videogallery }
 
-        return;
-
-        await this.$store.dispatch("geoobject/update", {
-          route: "/geoobject/update",
+        await this.$store.dispatch('geoobject/update', {
+          route: '/geoobject/update',
           payload: {
             ...this.geoobject,
-            categories: this.mergeCategories(),
-          },
-        });
+            categories: this.mergeCategories()
+          }
+        })
 
-        this.uploadPhotos(this.geoobject.id);
-        this.$onSuccess("Объект обновлен");
+        this.uploadPhotos(this.geoobject.id)
+        this.$onSuccess('Объект обновлен')
       } catch (e) {
-        return;
+        return
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

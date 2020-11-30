@@ -85,8 +85,8 @@
   </div>
 </template>
 <script>
-import DistrictManage from "@/mixins/DistrictManage";
-import { isEmptyObject } from "@/utils/common";
+import DistrictManage from '@/mixins/DistrictManage'
+import { isEmptyObject } from '@/utils/common'
 
 export default {
   mixins: [DistrictManage],
@@ -94,77 +94,77 @@ export default {
   props: {
     entity: {
       type: String,
-      required: true,
+      required: true
     },
 
     multipleSelection: {
       type: Array,
-      required: false,
-    },
+      required: false
+    }
   },
 
-  data() {
+  data () {
     return {
       localEntityItemsList: [],
       districtId: [],
-      itemStateId: [],
-    };
+      itemStateId: []
+    }
   },
 
   computed: {
-    isAdmin() {
-      return this.$isAdmin();
+    isAdmin () {
+      return this.$isAdmin()
     },
 
-    selectedRows() {
-      return this.multipleSelection;
+    selectedRows () {
+      return this.multipleSelection
     },
 
-    unPublishedRows() {
-      return this.multipleSelection.filter((item) => item.stateId !== 1);
+    unPublishedRows () {
+      return this.multipleSelection.filter((item) => item.stateId !== 1)
     },
 
-    unTrashedRows() {
-      return this.multipleSelection.filter((item) => item.stateId !== 4);
+    unTrashedRows () {
+      return this.multipleSelection.filter((item) => item.stateId !== 4)
     },
 
-    publishStates() {
-      return this.$store.getters["common/list"]("publishStates");
-    },
+    publishStates () {
+      return this.$store.getters['common/list']('publishStates')
+    }
   },
 
-  async created() {
-    this.localEntityItemsList = this.$store.getters[`${this.entity}/list`];
+  async created () {
+    this.localEntityItemsList = this.$store.getters[`${this.entity}/list`]
 
-    if (this.isAdmin) await this.loadDistricts();
-    if (!isEmptyObject(this.publishStates)) return;
+    if (this.isAdmin) await this.loadDistricts()
+    if (!isEmptyObject(this.publishStates)) return
 
     try {
-      await this.$store.dispatch("common/loadData", {
-        route: "/common/get-states",
-        state: "publishStates",
-      });
+      await this.$store.dispatch('common/loadData', {
+        route: '/common/get-states',
+        state: 'publishStates'
+      })
     } catch (e) {
-      return this.$onWarning("Не удалось получить состояниеы публикаций");
+      return this.$onWarning('Не удалось получить состояниеы публикаций')
     }
   },
 
   methods: {
-    setFilter() {
-      let payload = this.localEntityItemsList
+    setFilter () {
+      const payload = this.localEntityItemsList
         .filter((item) => {
           return (
             !this.districtId.length || this.districtId.includes(item.districtId)
-          );
+          )
         })
         .filter((item) => {
           return (
             !this.itemStateId.length || this.itemStateId.includes(item.stateId)
-          );
-        });
+          )
+        })
 
-      this.$store.dispatch(`${this.entity}/setFilter`, payload);
-    },
-  },
-};
+      this.$store.dispatch(`${this.entity}/setFilter`, payload)
+    }
+  }
+}
 </script>

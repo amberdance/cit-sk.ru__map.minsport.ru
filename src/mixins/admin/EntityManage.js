@@ -1,30 +1,31 @@
 export default {
   computed: {
-    globalProperties() {
-      return this.$store.getters[`${this.entity}/get`]("properties");
-    },
+    globalProperties () {
+      return this.$store.getters[`${this.entity}/get`]('properties')
+    }
   },
 
   methods: {
-    initializeUpdateProperties(entity) {
+    initializeUpdateProperties (entity) {
       if (this.$route.params.properties.length) {
         this.$route.params.properties.forEach((item) => {
-          this[entity].properties[item.code] = item.value;
-        });
-      } else
+          this[entity].properties[item.code] = item.value
+        })
+      } else {
         this.globalProperties.forEach((item) => {
-          this[entity].properties[item.code] = item.value;
-        });
+          this[entity].properties[item.code] = item.value
+        })
+      }
     },
 
-    uploadPhotos(id) {
+    uploadPhotos (id) {
       if (this.$refs.entityPhoto.hasPreviewPhoto()) {
-        this.$refs.entityPhoto.uploadFiles(id, "preview_image");
+        this.$refs.entityPhoto.uploadFiles(id, 'preview_image')
       }
 
       if (this.$refs.entityPhoto.hasPhotogallery()) {
-        this.$refs.entityPhoto.uploadFiles(id, "photogallery");
+        this.$refs.entityPhoto.uploadFiles(id, 'photogallery')
       }
-    },
-  },
-};
+    }
+  }
+}

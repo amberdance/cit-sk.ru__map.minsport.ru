@@ -1,71 +1,71 @@
 export const admin = [
-  { path: "/hall/list", redirect: "/admin" },
-  { path: "/geoobject/list", redirect: "/admin" },
-  { path: "/route/list", redirect: "/admin" },
+  { path: '/hall/list', redirect: '/admin' },
+  { path: '/geoobject/list', redirect: '/admin' },
+  { path: '/route/list', redirect: '/admin' },
 
   {
-    path: "/admin",
+    path: '/admin',
     meta: { requiresAuth: true },
-    component: () => import("@/views/Admin"),
+    component: () => import('@/views/Admin'),
 
     children: [
       {
-        path: "geo-list",
+        path: 'geo-list',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/geoobject/ListPage"),
+        component: () => import('@/components/admin/entity/geoobject/ListPage')
       },
 
       {
-        path: "geo-add",
+        path: 'geo-add',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/geoobject/AddGeo"),
+        component: () => import('@/components/admin/entity/geoobject/AddGeo')
       },
 
       {
-        path: "geo-update",
-        name: "updateGeo",
+        path: 'geo-update',
+        name: 'updateGeo',
         meta: { requiresAuth: true },
         component: () =>
-          import("@/components/admin/entity/geoobject/UpdateGeo"),
+          import('@/components/admin/entity/geoobject/UpdateGeo')
       },
 
       {
-        path: "hall-list",
+        path: 'hall-list',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/hall/ListPage"),
+        component: () => import('@/components/admin/entity/hall/ListPage')
       },
 
       {
-        path: "hall-add",
+        path: 'hall-add',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/hall/AddHall"),
+        component: () => import('@/components/admin/entity/hall/AddHall')
       },
 
       {
-        path: "hall-update",
-        name: "updateHall",
+        path: 'hall-update',
+        name: 'updateHall',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/hall/UpdateHall"),
+        component: () => import('@/components/admin/entity/hall/UpdateHall')
       },
 
       {
-        path: "route-list",
+        path: 'route-list',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/route/ListPage"),
+        component: () => import('@/components/admin/entity/route/ListPage')
       },
 
       {
-        path: "route-add",
+        path: 'route-add',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/route/AddRoute"),
+        component: () => import('@/components/admin/entity/route/AddRoute')
       },
 
       {
-        path: "route-update",
-        name: "updateRoute",
+        path: 'route-update',
+        name: 'updateRoute',
         meta: { requiresAuth: true },
-        component: () => import("@/components/admin/entity/route/UpdateRoute"),
-      },
-    ],
-  },
-];
+        component: () => import('@/components/admin/entity/route/UpdateRoute')
+      }
+    ]
+  }
+]

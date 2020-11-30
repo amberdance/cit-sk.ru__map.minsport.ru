@@ -9,19 +9,19 @@
 </template>
 
 <script>
-import Preloader from "./Preloader";
-import HeaderLayout from "./HeaderLayout";
+import Preloader from './Preloader'
+import HeaderLayout from './HeaderLayout'
 
 export default {
   components: {
     Preloader,
-    HeaderLayout,
+    HeaderLayout
   },
 
   computed: {
-    isLoading() {
-      return this.$store.getters["common/isLoading"];
-    },
-  },
-};
+    isLoading () {
+      return this.$store.getters['common/isLoading']
+    }
+  }
+}
 </script>

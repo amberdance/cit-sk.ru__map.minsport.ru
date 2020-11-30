@@ -67,23 +67,22 @@
   </div>
 </template>
 <script>
-import EntityPhoto from "@/components/admin/common/EntityPhoto";
-import EntityVideo from "@/components/admin/common/EntityVideo";
-import EntityManage from "@/mixins/admin/EntityManage";
-import RouteManage from "@/mixins/admin/RouteManage";
-import YandexMapInit from "@/mixins/map/YandexMapInit";
-import MultiRouteMange from "@/mixins/map/MultiRouteMange";
-import YandexMapManage from "@/mixins/map/YandexMapManage";
-import { isEmptyObject } from "@/utils/common";
+import EntityPhoto from '@/components/admin/common/EntityPhoto'
+import EntityVideo from '@/components/admin/common/EntityVideo'
+import EntityManage from '@/mixins/admin/EntityManage'
+import RouteManage from '@/mixins/admin/RouteManage'
+import YandexMapInit from '@/mixins/map/YandexMapInit'
+import MultiRouteMange from '@/mixins/map/MultiRouteMange'
+import { isEmptyObject } from '@/utils/common'
 
 export default {
   components: { EntityPhoto, EntityVideo },
 
   mixins: [YandexMapInit, MultiRouteMange, EntityManage, RouteManage],
 
-  data() {
+  data () {
     return {
-      entity: "route",
+      entity: 'route',
       propertiesComponent: null,
       isMultiRouteChanged: false,
       multiRoute: {},
@@ -97,72 +96,70 @@ export default {
         created: null,
         published: null,
         stateLabel: null,
-        routingMode: "bicycle",
+        routingMode: 'bicycle',
         waypoints: [],
-        properties: {},
-      },
-    };
+        properties: {}
+      }
+    }
   },
 
-  async created() {
-    if (isEmptyObject(this.$route.params))
-      return this.$router.push("/route/list");
+  async created () {
+    if (isEmptyObject(this.$route.params)) { return this.$router.push('/route/list') }
 
-    this.initializeUpdateFields();
-    await this.initializeYandexMap();
+    this.initializeUpdateFields()
+    await this.initializeYandexMap()
   },
 
   methods: {
-    async updateRoute() {
+    async updateRoute () {
       try {
-        this.$isLoading();
+        this.$isLoading()
 
-        if (!this.isMultiRouteChanged) delete this.route.waypoints;
+        if (!this.isMultiRouteChanged) delete this.route.waypoints
 
-        this.route.properties = this.$refs.entityProperties.getUpdateFields();
-        this.route.properties.videogallery = this.$refs.entityVideo.getVideos();
-        this.route.waypoints = this.multiRoute.properties.get("waypoints");
+        this.route.properties = this.$refs.entityProperties.getUpdateFields()
+        this.route.properties.videogallery = this.$refs.entityVideo.getVideos()
+        this.route.waypoints = this.multiRoute.properties.get('waypoints')
 
-        if (!this.route.properties.videogallery)
-          delete this.route.properties.videogallery;
+        if (!this.route.properties.videogallery) { delete this.route.properties.videogallery }
 
-        await this.$store.dispatch("route/update", {
-          route: "/route/update-route",
-          payload: this.route,
-        });
+        await this.$store.dispatch('route/update', {
+          route: '/route/update-route',
+          payload: this.route
+        })
 
-        this.uploadPhotos(this.route.id);
-        this.$onSuccess("Маршрут обновлен");
+        this.uploadPhotos(this.route.id)
+        this.$onSuccess('Маршрут обновлен')
       } catch (e) {
-        return;
+        return
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
     },
 
-    initializeUpdateFields() {
-      const route = this.route,
-        params = this.$route.params;
+    initializeUpdateFields () {
+      const route = this.route
+      const params = this.$route.params
 
-      route.id = params.id;
-      route.label = params.label;
-      route.waypoints = params.waypoints;
-      route.routingMode = params.routingMode;
-      route.distance = params.distance;
-      route.duration = params.duration;
-      route.stateLabel = params.stateLabel;
-      route.created = params.created;
-      route.published = params.published;
-      route.deleted = params.deleted;
+      route.id = params.id
+      route.label = params.label
+      route.waypoints = params.waypoints
+      route.routingMode = params.routingMode
+      route.distance = params.distance
+      route.duration = params.duration
+      route.stateLabel = params.stateLabel
+      route.created = params.created
+      route.published = params.published
+      route.deleted = params.deleted
 
-      this.waypoints = params.waypoints;
+      this.waypoints = params.waypoints
 
-      this.initializeUpdateProperties("route");
+      this.initializeUpdateProperties('route')
       this.propertiesComponent = () =>
-        import("@/components/admin/common/EntityProperties");
-    },
-  },
-};
+        import('@/components/admin/common/EntityProperties')
+    }
+  }
+}
 </script>
 <style module>
 .formWrapper {

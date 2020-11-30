@@ -41,8 +41,8 @@
   </div>
 </template>
 <script>
-import HandleUploadFile from "@/mixins/HandleUploadFile";
-import { isEmptyObject } from "@/utils/common";
+import HandleUploadFile from '@/mixins/HandleUploadFile'
+import { isEmptyObject } from '@/utils/common'
 
 export default {
   mixins: [HandleUploadFile],
@@ -50,41 +50,41 @@ export default {
   props: {
     entity: {
       type: String,
-      required: true,
+      required: true
     },
 
     isUpdatePage: {
       type: Boolean,
-      required: false,
-    },
+      required: false
+    }
   },
 
-  created() {
-    const params = this.$route.params;
+  created () {
+    const params = this.$route.params
 
-    if (isEmptyObject(params)) return;
+    if (isEmptyObject(params)) return
 
     if (params.previewImage.length) {
       this.previewImage = [
-        { id: params.previewImage[0].id, url: params.previewImage[0].src },
-      ];
+        { id: params.previewImage[0].id, url: params.previewImage[0].src }
+      ]
     }
 
     if (params.photogallery.length) {
       params.photogallery.forEach((item) => {
-        this.fileList.push({ id: item.id, url: item.src });
-      });
+        this.fileList.push({ id: item.id, url: item.src })
+      })
     }
   },
 
   methods: {
-    hasPreviewPhoto() {
-      return Boolean(this.previewImage.length);
+    hasPreviewPhoto () {
+      return Boolean(this.previewImage.length)
     },
 
-    hasPhotogallery() {
-      return Boolean(this.fileList.length);
-    },
-  },
-};
+    hasPhotogallery () {
+      return Boolean(this.fileList.length)
+    }
+  }
+}
 </script>

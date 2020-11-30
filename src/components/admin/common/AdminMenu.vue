@@ -35,79 +35,79 @@
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       rootMenuItems: [
         {
-          title: "Карта",
+          title: 'Карта',
           isParent: false,
-          index: "4",
-          route: "/map",
-          icon: "el-icon-location",
-        },
+          index: '4',
+          route: '/map',
+          icon: 'el-icon-location'
+        }
       ],
 
       childrenMenuItems: [
         {
-          title: "Объекты",
-          index: "1",
+          title: 'Объекты',
+          index: '1',
           isParent: true,
 
           childrens: [
             {
-              label: "создать",
-              route: "/admin/geo-add",
-              index: "1-1",
+              label: 'создать',
+              route: '/admin/geo-add',
+              index: '1-1'
             },
             {
-              label: "список",
-              route: "/admin/geo-list",
-              index: "1-2",
-            },
-          ],
+              label: 'список',
+              route: '/admin/geo-list',
+              index: '1-2'
+            }
+          ]
         },
 
         {
-          title: "Залы",
-          index: "2",
+          title: 'Залы',
+          index: '2',
           isParent: true,
 
           childrens: [
             {
-              label: "создать",
-              route: "/admin/hall-add",
-              index: "2-1",
+              label: 'создать',
+              route: '/admin/hall-add',
+              index: '2-1'
             },
             {
-              label: "список",
-              route: "/admin/hall-list",
-              index: "2-2",
-            },
-          ],
+              label: 'список',
+              route: '/admin/hall-list',
+              index: '2-2'
+            }
+          ]
         },
 
         {
-          title: "Маршруты",
-          index: "3",
+          title: 'Маршруты',
+          index: '3',
           isParent: true,
 
           childrens: [
             {
-              label: "создать",
-              route: "/admin/route-add",
-              index: "3-1",
+              label: 'создать',
+              route: '/admin/route-add',
+              index: '3-1'
             },
             {
-              label: "список",
-              route: "/admin/route-list",
-              index: "3-2",
-            },
-          ],
-        },
-      ],
-    };
-  },
-};
+              label: 'список',
+              route: '/admin/route-list',
+              index: '3-2'
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
 </script>
 <style module>
 .menuWrapper {

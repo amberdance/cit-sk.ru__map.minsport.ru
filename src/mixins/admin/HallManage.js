@@ -1,76 +1,76 @@
-import { isEmptyObject } from "@/utils/common";
+import { isEmptyObject } from '@/utils/common'
 
 export default {
-  data() {
+  data () {
     return {
       rules: {
         label: [
           {
             required: true,
-            message: "Обязательное поле",
-          },
+            message: 'Обязательное поле'
+          }
         ],
 
         geoId: [
           {
             required: true,
-            message: "Обязательное поле",
-          },
-        ],
-      },
-    };
+            message: 'Обязательное поле'
+          }
+        ]
+      }
+    }
   },
 
   computed: {
-    geoLabels() {
-      return this.$store.getters["hall/get"]("geoLabels");
-    },
+    geoLabels () {
+      return this.$store.getters['hall/get']('geoLabels')
+    }
   },
 
-  async created() {
-    if (isEmptyObject(this.geoLabels)) await this.loadGeolabel();
+  async created () {
+    if (isEmptyObject(this.geoLabels)) await this.loadGeolabel()
   },
 
   methods: {
-    async loadGeolabel() {
+    async loadGeolabel () {
       try {
-        await this.$store.dispatch("hall/loadData", {
-          route: "geo-labels",
-          state: "geoLabels",
-        });
+        await this.$store.dispatch('hall/loadData', {
+          route: 'geo-labels',
+          state: 'geoLabels'
+        })
       } catch (e) {
-        return;
+
       }
     },
 
-    async remoteSearch(query) {
+    async remoteSearch (query) {
       try {
-        this.isLoading = true;
+        this.isLoading = true
 
         if (!query || query.length < 2) {
-          this.searchMatches = [];
-          return;
+          this.searchMatches = []
+          return
         }
 
         this.searchMatches = await this.$HTTPPost({
-          route: "/geoobject/get-placemarks",
-          payload: { keywords: query },
-        });
+          route: '/geoobject/get-placemarks',
+          payload: { keywords: query }
+        })
       } catch (e) {
-        return;
+        return
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
-    async handleSubmit(isUpdatePage = false) {
+    async handleSubmit (isUpdatePage = false) {
       try {
-        await this.$refs.form.validate();
+        await this.$refs.form.validate()
       } catch (e) {
-        return this.$onWarning("Заполните обязательные поля");
+        return this.$onWarning('Заполните обязательные поля')
       }
 
-      return isUpdatePage ? await this.updateHall() : await this.addHal();
-    },
-  },
-};
+      return isUpdatePage ? await this.updateHall() : await this.addHal()
+    }
+  }
+}

@@ -1,8 +1,8 @@
-import { loadYmap } from "vue-yandex-maps";
-import { YANDEX_API_SETTINGS } from "../../config";
+import { loadYmap } from 'vue-yandex-maps'
+import { YANDEX_API_SETTINGS } from '../../config'
 
 export default {
-  data() {
+  data () {
     return {
       yandexMapInstance: null,
       clusterer: null,
@@ -16,56 +16,56 @@ export default {
 
       restrictedAreaCoords: [
         [43.573821, 40.767839],
-        [46.249287, 46.011095],
+        [46.249287, 46.011095]
       ],
 
       zoom: 7,
-      mapType: "yandex#hybrid",
-      controls: ["geolocationControl", "zoomControl", "searchControl"],
-    };
+      mapType: 'yandex#hybrid',
+      controls: ['geolocationControl', 'zoomControl', 'searchControl']
+    }
   },
 
   methods: {
-    async loadYandexMap() {
-      await loadYmap({ ...YANDEX_API_SETTINGS });
+    async loadYandexMap () {
+      await loadYmap({ ...YANDEX_API_SETTINGS })
     },
 
-    async initializeYmap() {
+    async initializeYmap () {
       try {
-        this.geolocation = ymaps.geolocation;
+        this.geolocation = ymaps.geolocation
 
-        const userLocationPromise = await this.geolocation.get();
+        const userLocationPromise = await this.geolocation.get()
         this.userLocation = userLocationPromise.geoObjects
           .get(0)
-          .geometry.getCoordinates();
+          .geometry.getCoordinates()
 
         this.yandexMapInstance = new ymaps.Map(
-          "yandex-map",
+          'yandex-map',
           {
             center: this.userLocation,
             zoom: this.zoom,
-            controls: this.controls,
+            controls: this.controls
           },
           {
             restrictMapArea: this.restrictedAreaCoords,
-            autoFitToViewport: "always",
+            autoFitToViewport: 'always'
           }
-        );
+        )
 
         this.clusterer = new ymaps.Clusterer({
-          preset: "islands#blackClusterIcons",
+          preset: 'islands#blackClusterIcons',
           clusterHideIconOnBalloonOpen: false,
-          geoObjectHideIconOnBalloonOpen: false,
-        });
+          geoObjectHideIconOnBalloonOpen: false
+        })
       } catch (e) {
-        return;
+
       }
     },
 
-    getCoords() {
-      this.yandexMapInstance.events.add("click", (event) => {
-        return event.get("coords");
-      });
-    },
-  },
-};
+    getCoords () {
+      this.yandexMapInstance.events.add('click', (event) => {
+        return event.get('coords')
+      })
+    }
+  }
+}

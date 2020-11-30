@@ -58,72 +58,72 @@
 </template>
 
 <script>
-import EntityPhoto from "@/components/admin/common/EntityPhoto";
-import EntityVideo from "@/components/admin/common/EntityVideo";
-import EntityManage from "@/mixins/admin/EntityManage";
-import HallManage from "@/mixins/admin/HallManage";
-import { isEmptyObject } from "@/utils/common";
+import EntityPhoto from '@/components/admin/common/EntityPhoto'
+import EntityVideo from '@/components/admin/common/EntityVideo'
+import EntityManage from '@/mixins/admin/EntityManage'
+import HallManage from '@/mixins/admin/HallManage'
 
 export default {
   components: { EntityPhoto, EntityVideo },
 
   mixins: [EntityManage, HallManage],
 
-  data() {
+  data () {
     return {
-      entity: "hall",
+      entity: 'hall',
       propertiesComponent: null,
 
       hall: {
         id: null,
         geoId: null,
         label: null,
-        properties: {},
-      },
-    };
+        properties: {}
+      }
+    }
   },
 
-  created() {
+  created () {
     this.propertiesComponent = () =>
-      import("@/components/admin/common/EntityProperties");
+      import('@/components/admin/common/EntityProperties')
   },
 
   methods: {
-    async addHal() {
+    async addHal () {
       try {
-        this.$isLoading();
+        this.$isLoading()
 
-        this.hall.properties = this.$refs.entityProperties.getFields();
-        this.hall.properties.videogallery = this.$refs.entityVideo.getVideos();
+        this.hall.properties = this.$refs.entityProperties.getFields()
+        this.hall.properties.videogallery = this.$refs.entityVideo.getVideos()
 
-        if (!this.hall.properties.videogallery)
-          delete this.hall.properties.videogallery;
+        if (!this.hall.properties.videogallery) {
+          delete this.hall.properties.videogallery
+        }
 
         const { data } = await this.$HTTPPost({
-          route: "/hall/add",
-          payload: this.hall,
-        });
+          route: '/hall/add',
+          payload: this.hall
+        })
 
-        this.uploadPhotos(data.id);
+        this.uploadPhotos(data.id)
 
-        this.purge();
-        this.$onSuccess("Зал добавлен");
+        this.purge()
+        this.$onSuccess('Зал добавлен')
       } catch (e) {
-        return;
+        return
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
     },
 
-    purge() {
-      this.hall.id = null;
-      this.hall.label = null;
-      this.hall.geoId = null;
-      this.hall.properties = {};
-      this.$refs.entityProperties.resetFields();
-      this.$refs.entityVideo.resetFields();
-      this.$refs.form.resetFields();
-    },
-  },
-};
+    purge () {
+      this.hall.id = null
+      this.hall.label = null
+      this.hall.geoId = null
+      this.hall.properties = {}
+      this.$refs.entityProperties.resetFields()
+      this.$refs.entityVideo.resetFields()
+      this.$refs.form.resetFields()
+    }
+  }
+}
 </script>

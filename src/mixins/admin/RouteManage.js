@@ -1,40 +1,40 @@
 export default {
-  data() {
+  data () {
     return {
       rules: {
         label: [
           {
             required: true,
-            message: "Обязательное поле",
-          },
-        ],
-      },
-    };
+            message: 'Обязательное поле'
+          }
+        ]
+      }
+    }
   },
 
   methods: {
-    async initializeYandexMap() {
+    async initializeYandexMap () {
       try {
-        this.$isLoading();
+        this.$isLoading()
 
-        await this.loadYandexMap();
-        await this.initializeYmap();
-        this.multiRouteInit();
+        await this.loadYandexMap()
+        await this.initializeYmap()
+        this.multiRouteInit()
       } catch (e) {
-        return;
+        return
       } finally {
-        this.$isLoading(false);
+        this.$isLoading(false)
       }
     },
 
-    async handleSubmit(isUpdatePage = false) {
+    async handleSubmit (isUpdatePage = false) {
       try {
-        await this.$refs.form.validate();
+        await this.$refs.form.validate()
       } catch (e) {
-        return this.$onWarning("Заполните обязательные поля");
+        return this.$onWarning('Заполните обязательные поля')
       }
 
-      return isUpdatePage ? await this.updateRoute() : await this.addRoute();
-    },
-  },
-};
+      return isUpdatePage ? await this.updateRoute() : await this.addRoute()
+    }
+  }
+}

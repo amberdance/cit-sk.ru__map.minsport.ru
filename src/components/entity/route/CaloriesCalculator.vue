@@ -66,77 +66,77 @@
   </div>
 </template>
 <script>
-import AnimatedNumber from "animated-number-vue";
+import AnimatedNumber from 'animated-number-vue'
 
 export default {
   components: {
-    AnimatedNumber,
+    AnimatedNumber
   },
 
   props: {
     routeProperties: {
       type: Object,
-      required: true,
-    },
+      required: true
+    }
   },
 
-  data() {
+  data () {
     return {
       distance: 0,
       duration: 0,
-      routeMode: "pedestrian",
+      routeMode: 'pedestrian',
 
       age: 1,
       weight: 69,
       height: 180,
       coef: 4,
-      gender: true,
-    };
+      gender: true
+    }
   },
 
   computed: {
-    calories() {
-      return this.routeMode == "pedestrian"
+    calories () {
+      return this.routeMode === 'pedestrian'
         ? this.pedestrianCalories
-        : this.bicycleCalories;
+        : this.bicycleCalories
     },
 
     /**
      *0,035 * М + (V2/H) * 0,029 * М, где М — вес тела человека, H — рост человека, V — скорость ходьбы
      */
-    pedestrianCalories() {
-      let result =
+    pedestrianCalories () {
+      const result =
         0.35 * this.weight +
-        (Math.pow(this.coef, 2) / this.height) * this.weight * this.duration;
+        (Math.pow(this.coef, 2) / this.height) * this.weight * this.duration
 
-      return Number(result);
+      return Number(result)
     },
 
-    bicycleCalories() {
-      let result =
+    bicycleCalories () {
+      const result =
         0.35 * this.weight +
-        (this.coef / this.height) * this.weight * this.duration;
+        (this.coef / this.height) * this.weight * this.duration
 
-      return Number(result);
-    },
+      return Number(result)
+    }
   },
 
-  created() {
-    const { duration, distance, routingMode } = this.routeProperties;
+  created () {
+    const { duration, distance, routingMode } = this.routeProperties
 
-    this.duration = duration / 60;
-    this.distance = distance;
-    this.routeMode = routingMode;
+    this.duration = duration / 60
+    this.distance = distance
+    this.routeMode = routingMode
 
-    if (routingMode == "bicycle") this.coef = 10;
+    if (routingMode === 'bicycle') this.coef = 10
   },
 
   methods: {
-    formatValue(value) {
-      return Number(value).toFixed(2);
-    },
-  },
-};
+    formatValue (value) {
+      return Number(value).toFixed(2)
+    }
+  }
+}
 </script>
 <style module>
 .root {

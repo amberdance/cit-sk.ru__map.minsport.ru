@@ -43,12 +43,12 @@ export default {
   // },
 
   methods: {
-    logout() {
-      this.$logOut();
-      if (this.$route.path != "/map") this.$router.push("/map");
-    },
-  },
-};
+    logout () {
+      this.$logOut()
+      if (this.$route.path !== '/map') this.$router.push('/map')
+    }
+  }
+}
 </script>
 <style module>
 .ministryHeading a {

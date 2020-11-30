@@ -65,11 +65,11 @@
 </template>
 
 <script>
-import MainLayout from "@/components/layouts/MainLayout";
-import ListPage from "@/components/entity/hall/ListPage";
-import Photogallery from "@/components/common/Photogallery";
-import Youtube from "@/components/common/Youtube";
-import DetailedProperties from "@/components/common/DetailedProperties";
+import MainLayout from '@/components/layouts/MainLayout'
+import ListPage from '@/components/entity/hall/ListPage'
+import Photogallery from '@/components/common/Photogallery'
+import Youtube from '@/components/common/Youtube'
+import DetailedProperties from '@/components/common/DetailedProperties'
 
 export default {
   components: {
@@ -77,41 +77,40 @@ export default {
     DetailedProperties,
     Photogallery,
     Youtube,
-    Halls: ListPage,
+    Halls: ListPage
   },
 
-  data() {
+  data () {
     return {
       geoId: null,
       previewImage: null,
 
       geoobject: {
         videogallery: [],
-        photogallery: [],
-      },
-    };
+        photogallery: []
+      }
+    }
   },
 
-  async created() {
-    process;
+  async created () {
     try {
-      this.$isLoading();
+      this.$isLoading()
 
-      this.geoId = this.$route.params.id || this.$route.query.id;
+      this.geoId = this.$route.params.id || this.$route.query.id
 
       this.geoobject = await this.$HTTPGet({
-        route: "/geoobject/get-list",
-        payload: { id: this.geoId },
-      });
+        route: '/geoobject/get-list',
+        payload: { id: this.geoId }
+      })
 
       this.previewImage = this.geoobject.previewImage.length
         ? this.geoobject.previewImage[0].src
-        : null;
+        : null
     } catch (e) {
-      if (e.code === 404) this.$router.push("/map");
+      if (e.code === 404) this.$router.push('/map')
     } finally {
-      this.$isLoading(false);
+      this.$isLoading(false)
     }
-  },
-};
+  }
+}
 </script>

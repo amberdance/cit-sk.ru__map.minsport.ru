@@ -19,25 +19,25 @@ export default {
   props: {
     images: {
       type: Array,
-      required: true,
-    },
+      required: true
+    }
   },
 
-  data() {
+  data () {
     return {
-      url: "",
-      srcList: [],
-    };
+      url: '',
+      srcList: []
+    }
   },
 
   computed: {
-    imagesCount() {
-      return this.srcList.length >= 6 ? 6 : this.srcList.length;
-    },
+    imagesCount () {
+      return this.srcList.length >= 6 ? 6 : this.srcList.length
+    }
   },
 
-  created() {
-    this.srcList = this.images.map((item) => item.src);
-  },
-};
+  created () {
+    this.srcList = this.images.map((item) => item.src)
+  }
+}
 </script>
