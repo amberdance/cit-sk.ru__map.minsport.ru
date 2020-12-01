@@ -22,14 +22,14 @@ export default {
       }
     },
 
-    setBounds () {
+    setBounds (compareArray = 'districts') {
       if (!this.placemarksCollection.length) return
 
-      if (!this.filter.districts.length) { return this.yandexMapInstance.setZoom(9) }
+      if (!this.filter[compareArray].length) { return this.yandexMapInstance.setZoom(9) }
 
       this.yandexMapInstance.setBounds(this.clusterer.getBounds())
 
-      this.filter.districts.length > 1
+      this.filter[compareArray].length > 1
         ? this.yandexMapInstance.setZoom(9)
         : this.yandexMapInstance.setZoom(13)
     },

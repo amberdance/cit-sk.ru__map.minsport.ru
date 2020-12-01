@@ -29,12 +29,11 @@ export default {
 
     async loadData ({ commit }, { route, payload, state = 'items' }) {
       route = `/geoobject/${route}`
+      commit('clear', state)
 
       const responseData = await dispatch.HTTPPost({ route, payload })
 
-      commit('clear', state)
-
-      if (route == '/geoobject/get-categories') {
+      if (route === '/geoobject/get-categories') {
         for (const key in responseData) {
           commit('set', { key: state, props: responseData[key] })
         }

@@ -141,13 +141,17 @@ class MySQLHelper
 
     /**
      * @param string $query
-     * @param array|null $args
+     * @param array $args
      *
      * @return MySQLHelper
      */
-    public function customQuery(string $query, ?array $args = null): MySQLHelper
+    public function customQuery(string $query, array $args = []): MySQLHelper
     {
-        $this->statement = $this->getConnection()->executeQuery($query, $args);
+
+        $this->queryString = $query;
+        $this->args        = $args;
+
+        $this->runQuery();
 
         return $this;
     }
@@ -438,6 +442,7 @@ class MySQLHelper
         } else {
             $this->statement = $this->getConnection()->executeQuery($this->queryString, $this->args);
         }
+
         $this->isSkipArgs = false;
 
         return $this->dbConnection;
@@ -539,7 +544,6 @@ class MySQLHelper
         $comparsion   = null;
 
         foreach ($filter as $key => $field) {
-
             if (preg_match("/^[^\w\s:']+/", $field, $match)) {
                 $comparsion = $this->getFilterComparsion($match[0]);
 
@@ -613,7 +617,7 @@ class MySQLHelper
         unset($this->args);
 
         foreach ($rawArgs as $key => $value) {
-            $this->args[$this->getPlaceHolder($key)] = trim(preg_replace("/[^\w\s.,\/]/u", "", $value));
+            $this->args[$this->getPlaceHolder($key)] = trim(preg_replace("/[^\w\s.,-:\/]/u", "", $value));
         }
     }
 

@@ -11,11 +11,29 @@
       placeholder="тип маршрута"
       filterable
       clearable
-      @change="changeRouteMode"
+      @change="changeFilter"
       @clear="loadRoutes(true)"
     >
       <el-option label="пешеходный" value="pedestrian"> </el-option>
       <el-option label="велосипедный" value="bicycle"> </el-option>
+    </el-select>
+
+    <el-select
+      class="control-item"
+      placeholder="Населенный пункт"
+      v-model="filter.districts"
+      clearable
+      filterable
+      multiple
+      @change="changeFilter"
+    >
+      <el-option
+        v-for="item in districts"
+        :key="item.id"
+        :value="item.id"
+        :label="item.label"
+      >
+      </el-option>
     </el-select>
 
     <el-select
@@ -64,7 +82,11 @@ export default {
       isRouteModeChanged: false,
       routeId: null,
       multiRoute: {},
-      routingMode: ''
+      routingMode: 'bicycle',
+
+      filter: {
+        districts: []
+      }
     }
   },
 
@@ -73,6 +95,10 @@ export default {
       return this.$store.getters['route/list'].filter(
         item => item.routingMode === this.routingMode
       )
+    },
+
+    districts () {
+      return this.$store.getters['district/list']
     }
   },
 
@@ -91,11 +117,17 @@ export default {
       })
     },
 
-    async changeRouteMode () {
+    async changeFilter () {
       try {
+        this.$isLoading()
+
         const placemarks = await this.$HTTPPost({
           route: '/route/get-placemarks',
-          payload: { routingMode: this.routingMode }
+
+          payload: {
+            routingMode: this.routingMode,
+            districts: this.filter.districts
+          }
         })
 
         if (!placemarks) return this.$onWarning('Маршруты не найдены')
@@ -131,8 +163,29 @@ export default {
 
         this.isRouteModeChanged = true
         this.routeId = null
+
+        this.setBounds()
       } catch (e) {
         return
+      } finally {
+        this.$isLoading(false)
+      }
+    },
+
+    async onRouteChange () {
+      try {
+        this.$isLoading()
+
+        if (!this.routeId) return
+
+        const coords = this.routes.filter(item => item.id === this.routeId)[0]
+          .coords
+
+        await this.yandexMapInstance.panTo([coords])
+      } catch (e) {
+        return
+      } finally {
+        this.$isLoading(false)
       }
     },
 
@@ -182,23 +235,6 @@ export default {
       )
 
       return { preset, balloonContentLayout }
-    },
-
-    async onRouteChange () {
-      try {
-        this.$isLoading()
-
-        if (!this.routeId) return
-
-        const coords = this.routes.filter(item => item.id === this.routeId)[0]
-          .coords
-
-        await this.yandexMapInstance.panTo([coords])
-      } catch (e) {
-        return
-      } finally {
-        this.$isLoading(false)
-      }
     },
 
     changePlacemarksVisibility (isVisible = false) {

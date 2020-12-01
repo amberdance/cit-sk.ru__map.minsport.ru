@@ -1,4 +1,10 @@
-{
+[
+  {
     "version": "1.0",
     "description": "Приложение выпущено в production"
-}
+  },
+  {
+    "version": "1.1",
+    "description": "Оптимизация кода"
+  }
+]

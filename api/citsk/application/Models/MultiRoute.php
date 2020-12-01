@@ -35,6 +35,7 @@ class MultiRoute extends CommonModel
 
         $routes = $this->database
             ->setDbTable("multiroute_items mi")
+            ->skipArgs()
             ->getList($select, $filter['filter'], $filter['join'])
             ->getRows();
 
@@ -199,7 +200,9 @@ class MultiRoute extends CommonModel
      */
     private function getQueryFilter(bool $isShowDraft = false): array
     {
-        $filter = [];
+        $filter = [
+            // "mi.district_id" => "(1,2)",
+        ];
 
         $join = [
             "publish_states state" => "state.id = mi.publish_state_id",
@@ -212,6 +215,12 @@ class MultiRoute extends CommonModel
 
         if ($this->user->isManager) {
             $filter["district_id"] = $this->user->districtId;
+        }
+
+        if (isset($_POST['districts']) && !empty($_POST['districts'])) {
+            $districtsImplode = implode(",", $_POST['districts']);
+
+            $filter['mi.district_id'] = "() $districtsImplode";
         }
 
         if (isset($_GET['id'])) {
@@ -227,7 +236,7 @@ class MultiRoute extends CommonModel
 
         if (isset($_POST)) {
             if ($_POST['routingMode']) {
-                $filter["mi.mode"] = $_POST['routingMode'];
+                $filter["mi.mode"] = "'{$_POST['routingMode']}'";
             }
         }
 

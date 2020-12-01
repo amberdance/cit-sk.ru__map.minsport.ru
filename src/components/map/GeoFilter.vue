@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 <template>
   <div class="map-control-wrapper">
     <div class="sub-heading a-center" style="font-size:15px;">
@@ -8,7 +7,6 @@
     <el-divider />
     <div class="geo-select-wrapper">
       <el-select
-        ref="test"
         class="control-item"
         placeholder="Населенный пункт"
         v-model="filter.districts"
@@ -121,8 +119,8 @@
 <script>
 import YandexMapManage from '@/mixins/map/YandexMapManage'
 import { removeEmptyFields, throttle } from '@/utils/common'
-export default {
 
+export default {
   mixins: [YandexMapManage],
 
   props: {
@@ -195,14 +193,6 @@ export default {
     }, 1200),
 
     async setFilter (isSliderHere) {
-      // if (!this.placemarks.length) {
-      //   this.clusterer.removeAll();
-      //   this.placemarksCollection = [];
-
-      //   return;
-      // }
-
-
       this.$isLoading()
       this.hideMultiRoute()
 
@@ -250,12 +240,14 @@ export default {
       }
 
       for (const key in this.filter.category) {
-        this.filter.category[key].forEach((item) => {
+        this.filter.category[key].forEach(item => {
           payload.category.push(item)
         })
       }
 
-      if (payload.category.length >= 6) { return this.$onWarning('Уменьшите критерии поиска по категориям') }
+      if (payload.category.length >= 6) {
+        return this.$onWarning('Уменьшите критерии поиска по категориям')
+      }
 
       if (payload.slider.minAge === 1) delete payload.slider.minAge
       if (payload.slider.price === 0) delete payload.slider.price
