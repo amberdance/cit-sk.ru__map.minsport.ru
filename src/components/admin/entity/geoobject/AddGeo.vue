@@ -130,7 +130,7 @@ export default {
         this.purge()
         this.$onSuccess('Объект добавлен')
       } catch (e) {
-        if (e.code === 102) { return this.$onWarning('Объект с таким названием уже существует') }
+        if (e.code === 102) return this.$onWarning('Объект с таким названием уже существует')
       } finally {
         this.$isLoading(false)
       }

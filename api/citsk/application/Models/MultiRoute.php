@@ -35,7 +35,7 @@ class MultiRoute extends CommonModel
 
         $routes = $this->database
             ->setDbTable("multiroute_items mi")
-            ->getList($select, $filter['filter'], $filter['args'], $filter['join'])
+            ->getList($select, $filter['filter'], $filter['join'])
             ->getRows();
 
         foreach ($routes as $key => $value) {
@@ -69,11 +69,11 @@ class MultiRoute extends CommonModel
             "district.label" => "district_label",
         ];
 
-        $filter = $this->getQueryFilter(true);
+        $filter = $this->getQueryFilter();
 
         $routes = $this->database
             ->setDbTable("multiroute_items mi")
-            ->getList($select, $filter['filter'], $filter['args'], $filter['join'])
+            ->getList($select, $filter['filter'], $filter['join'])
             ->getRows();
 
         foreach ($routes as $key => $value) {
@@ -88,138 +88,76 @@ class MultiRoute extends CommonModel
     }
 
     /**
+     * @param array $params
      *
      * @return int
      */
-    public function addRoute(): int
+    public function addRoute(array $params): int
     {
 
-        $coords = $_POST['waypoints'][0]['coordinates'];
-
-        $insert = [
-            "label"       => ":label",
-            "mode"        => ":mode",
-            "longitude"   => ":longitude",
-            "latitude"    => ":latitude",
-            "duration"    => ":duration",
-            "distance"    => ":distance",
-            "district_id" => $this->user->districtId,
-        ];
-
-        $args = [
-            ":label"     => $_POST['label'],
-            ":mode"      => $_POST['routingMode'],
-            ":longitude" => $coords[0],
-            ":latitude"  => $coords[1],
-            ":duration"  => $_POST['duration'],
-            ":distance"  => $_POST['distance'],
-        ];
-
-        if ($this->user->isManager) {
-            $insert['publish_state_id'] = 2;
-        }
-
-        $routeId = $this->database
+        return $this->database
             ->setDbTable("multiroute_items")
-            ->add($insert, $args, true)
+            ->add($params)
             ->getInsertedId();
-
-        return $routeId;
-
     }
 
     /**
+     * @param int $id
+     * @param array $params
+     *
      * @return MultiRoute
      */
-    public function updateRoute(): MultiRoute
+    public function updateRoute(int $id, array $params): MultiRoute
     {
-        $coords = $_POST['waypoints'][0]['coordinates'];
-
-        $updateField = [
-            "label"     => ":label",
-            "mode"      => ":mode",
-            "longitude" => ":longitude",
-            "latitude"  => ":latitude",
-            "duration"  => ":duration",
-            "distance"  => ":distance",
-
-        ];
 
         $filter = [
-            "id" => ":id",
-        ];
-
-        $updateArgs = [
-            ":id"        => $_POST['id'],
-            ":label"     => trim($_POST['label']),
-            ":mode"      => $_POST['routingMode'],
-            ":longitude" => $coords[0],
-            ":latitude"  => $coords[1],
-            ":duration"  => $_POST['duration'],
-            ":distance"  => $_POST['distance'],
+            "id" => $id,
         ];
 
         $this->database
             ->setDbTable("multiroute_items")
-            ->update($updateField, $filter, $updateArgs);
+            ->update($params, $filter);
 
         return $this;
     }
 
     /**
-     * @param int|null $id
+     * @param int $id
+     * @param array $waypoints
      *
-     * @return MultiRoute
+     * @return void
      */
-    public function addWayPoint(?int $id = null): MultiRoute
+    public function addWayPoint(int $id, array $waypoints): void
     {
-
-        if (empty($_POST['waypoints'])) {
-            return $this;
-        }
 
         $this->database->setDbTable("multiroute_geo");
 
         $addWaypoint = function ($waypoint, $key, $id) {
 
             $insert = [
-                "multiroute_id" => ":id",
-                "coords"        => ":coords",
+                "multiroute_id" => $id,
+                "coords"        => implode(",", array_reverse($waypoint['coordinates'])),
             ];
 
-            $args = [
-                ":id"     => $id ?? $_POST['id'],
-                ":coords" => implode(",", array_reverse($waypoint['coordinates'])),
-            ];
-
-            $this->database->add($insert, $args);
+            $this->database->add($insert);
         };
 
-        array_walk($_POST['waypoints'], $addWaypoint, $id);
-
-        return $this;
+        array_walk($waypoints, $addWaypoint, $id);
     }
 
     /**
      * @return MultiRoute
      */
-    public function deleteWaypoint(): MultiRoute
+    public function deleteWaypoint(int $id): MultiRoute
     {
-        if (!isset($_POST['waypoints'])) {
-            return $this;
-        }
 
         $delete = [
-            "multiroute_id" => ":id",
-        ];
-
-        $args = [
-            ":id" => $_POST['id'],
+            "multiroute_id" => $id,
         ];
 
         $this->database
             ->setDbTable("multiroute_geo")
-            ->delete(null, $delete, $args);
+            ->delete(null, $delete);
 
         return $this;
     }
@@ -245,7 +183,7 @@ class MultiRoute extends CommonModel
 
         $coords = $this->database
             ->setDbTable("multiroute_geo")
-            ->getList($select, $filter, null, null, null, $sort)
+            ->getList($select, $filter, null, null, $sort)
             ->getRows(7);
 
         return $coords;
@@ -268,8 +206,6 @@ class MultiRoute extends CommonModel
             "districts district"   => "district.id = mi.district_id",
         ];
 
-        $args = null;
-
         if (!$isShowDraft) {
             $filter['state.id'] = 1;
         }
@@ -279,26 +215,24 @@ class MultiRoute extends CommonModel
         }
 
         if (isset($_GET['id'])) {
-            $filter = ["mi.id" => ":id"];
-            $args   = [":id" => $_GET['id']];
+            $filter = [
+                "mi.id" => $_GET['id'],
+            ];
 
             return [
                 'filter' => $filter,
-                'args'   => $args,
+                'join'   => $join,
             ];
         }
 
         if (isset($_POST)) {
-
             if ($_POST['routingMode']) {
-                $filter["mi.mode"] = ":mode";
-                $args[":mode"]     = $_POST['routingMode'];
+                $filter["mi.mode"] = $_POST['routingMode'];
             }
         }
 
         return [
             'filter' => $filter,
-            'args'   => $args,
             'join'   => $join,
         ];
     }

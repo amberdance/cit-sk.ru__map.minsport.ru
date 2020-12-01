@@ -17,8 +17,14 @@ class Structure
      */
     public function __construct(array $data, string $label = null)
     {
+        $methodName = null;
 
-        $methodName = $this->getMethodName($label);
+        if (!$label) {
+            $methodName = "abstractStructure";
+        } else {
+            $methodName = $this->getMethodName($label);
+        }
+
         $this->handleStructure($methodName, $data);
 
     }

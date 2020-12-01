@@ -6,7 +6,6 @@ use Exception;
 use PDO;
 
 /**
- * MySQLHelper
  *
  * @property string $queryString
  * @property string $dbTable
@@ -14,54 +13,56 @@ use PDO;
  */
 class MySQLHelper
 {
+
     /**
-     * dbConnection
-     *
      * @var PDOBase
      */
     private $dbConnection;
 
     /**
-     * PDOInstance
-     *
      * @var \PDO
      */
     private $PDOInstance;
 
     /**
-     * statement
-     *
      * @var \PDOStatement
      */
     private $statement;
 
     /**
-     * queryString
-     *
-     * @property string
+     * @var string
      */
     private $queryString;
 
     /**
-     * dbTable
-     *
-     * @property string
+     * @var string
      */
     private $dbTable;
 
     /**
-     * isTransactionBegin
-     *
      * @var bool
      */
     private $isTransactionBegin = false;
 
     /**
-     * transactions
-     *
      * @var array
      */
-    private $transactions;
+    private $transactions = [];
+
+    /**
+     * @var int
+     */
+    private $lastInsertedId;
+
+    /**
+     * @var array
+     */
+    private $args = [];
+
+    /**
+     * @var bool
+     */
+    private $isSkipArgs = false;
 
     public function __construct()
     {
@@ -89,6 +90,14 @@ class MySQLHelper
     }
 
     /**
+     * @return int
+     */
+    public function getInsertedId(): int
+    {
+        return $this->lastInsertedId;
+    }
+
+    /**
      * @return string|null
      */
     public function getDbTable(): ?string
@@ -97,27 +106,106 @@ class MySQLHelper
     }
 
     /**
+     * @return MySQLHelper
+     */
+    public function skipArgs(): MySQLHelper
+    {
+        $this->isSkipArgs = true;
+
+        return $this;
+    }
+
+    /**
+     * Main query building method
+     *
      * @param array|string|null $select
      * @param array|null $filter
      * @param array|null $filters
      * @param array|null $join
-     * @param array|null $group
-     * @param array|null $sort
+     *
+     * @return MySQLHelper
+     */
+    public function getList($select = null, ?array $filter = null, ?array $join = null): MySQLHelper
+    {
+
+        $this->setFields($select)
+            ->setJoinFieldsIfExists($join)
+            ->setFilterFieldsIfExists($filter);
+
+        if (!$this->isSkipArgs) {
+            $this->setArgs($filter);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $query
+     * @param array|null $args
+     *
+     * @return MySQLHelper
+     */
+    public function customQuery(string $query, ?array $args = null): MySQLHelper
+    {
+        $this->statement = $this->getConnection()->executeQuery($query, $args);
+
+        return $this;
+    }
+
+    /**
+     * @param array $fields
+     *
+     * @return MySQLHelper
+     */
+    public function setSorting(array $fields): MySQLHelper
+    {
+
+        $sortStroke = "ORDER BY ";
+
+        foreach ($fields as $key => $field) {
+            $sortStroke .= "$key $field, ";
+        }
+
+        $sortStroke = trim($sortStroke, ', ');
+
+        $this->queryString .= " $sortStroke";
+
+        return $this;
+    }
+
+    /**
+     * @param array $fields
+     *
+     * @return MySQLHelper
+     */
+    public function setGrouping(array $fields): MySQLHelper
+    {
+
+        $groupStroke = null;
+
+        foreach ($fields as $field) {
+            $groupStroke .= "GROUP BY $field, ";
+        }
+
+        $groupStroke = trim($groupStroke, ', ');
+
+        $this->queryString .= " $groupStroke";
+
+        return $this;
+    }
+
+    /**
      * @param int|null $limiter
      *
      * @return MySQLHelper
      */
-    public function getList($select = null, ?array $filter = null, ?array $args = null, ?array $join = null, ?array $group = null, ?array $sort = null, ?int $limiter = null): MySQLHelper
+    public function setLimit(?int $limiter): MySQLHelper
     {
+        if (!$limiter) {
+            return $this;
+        }
 
-        $this->setFields($select)
-            ->setJoinIfExists($join)
-            ->setFilterIsExists($filter)
-            ->setGroupFieldsIfExists($group)
-            ->setSortIfExists($sort)
-            ->setLimitIfExists($limiter);
-
-        $this->statement = $this->getConnection()->executeQuery($this->queryString, $args);
+        $this->queryString .= " LIMIT $limiter";
 
         return $this;
 
@@ -125,133 +213,115 @@ class MySQLHelper
 
     /**
      * @param array $fields
-     * @param array|null $args
-     * @param bool $isReturnId
      *
      * @return MySQLHelper
      */
-    public function add(array $fields, ?array $args = null, bool $isReturnId = false): MySQLHelper
+    public function add(array $fields): MySQLHelper
     {
 
         $this->setInsertFileds($fields);
 
-        if ($isReturnId) {
-            $result = $this->getConnection()->executeQuery($this->queryString, $args, true);
+        if (!$this->isSkipArgs) {
+            $this->setArgs($fields);
+        }
 
-            $this->PDOInstance = $result['PDO'];
-            $this->statement   = $result['STATEMENT'];
+        if ($this->isTransactionBegin) {
 
-            if ($this->isTransactionBegin) {
-                $this->transactions[] = [
-                    'query' => $this->queryString,
-                    'args'  => $args,
-                ];
+            $this->transactions[] = [
+                'query' => $this->queryString,
+                'args'  => $this->args,
+            ];
 
-                return $this;
+            return $this;
+        }
 
-            }
+        $this->runQuery(true);
+        $this->lastInsertedId = $this->PDOInstance->lastInsertId();
 
-        } else {
-            if ($this->isTransactionBegin) {
-                $this->transactions[] = [
-                    'query' => $this->queryString,
-                    'args'  => $args,
-                ];
-
-                return $this;
-            }
-
-            $this->statement = $this->getConnection()->executeQuery($this->queryString, $args);
+        if (!boolval($this->lastInsertedId)) {
+            throw new DataBaseException("Insert failed");
         }
 
         return $this;
-
     }
 
     /**
-     * @param string $query
-     * @param array|null $args
-     *
-     * @return void
-     */
-    public function query(string $query, ?array $args = null): void
-    {
-        $this->getConnection()->executeQuery($query, $args);
-    }
-
-    /**
-     * update row query
-     *
-     * @param  array|null $updateFields
-     * @param  array|null $filter
-     * @param  array|null $updateArgs
-     * @param  array|null $join
+     * @param array $updateFields
+     * @param array $filter
+     * @param array|null $join
      *
      * @return MySQLHelper
      */
-    public function update(array $updateFields, ?array $filter = null, ?array $updateArgs = null, ?array $join = null): MySQLHelper
+    public function update(array $updateFields, array $filter = [], ?array $join = null): MySQLHelper
     {
+        $joinString = null;
 
         if ($join) {
-            $joinString = $this->setJoinIfExists($join, true);
+            $joinString = $this->setJoinFieldsIfExists($join, true);
         }
 
-        $this->setUpdateFields($updateFields, $joinString ?? null)
-            ->setFilterIsExists($filter);
+        $this->setUpdateFields($updateFields, $joinString)
+            ->setFilterFieldsIfExists($filter);
+
+        if (!$this->isSkipArgs) {
+            $this->setArgs(array_merge($updateFields, $filter));
+        }
 
         if ($this->isTransactionBegin) {
             $this->transactions[] = [
                 'query' => $this->queryString,
-                'args'  => $updateArgs,
+                'args'  => $this->args,
             ];
 
+            return $this;
+        }
+
+        $this->runQuery();
+
+        return $this;
+
+    }
+
+    /**
+     * @param array|string|null $deleteFields
+     * @param array|null $filter
+     * @param array|null $args
+     * @param array|null $join
+     *
+     * @return MySQLHelper
+     */
+    public function delete($deleteFields = null, ?array $filter = null, ?array $join = null): MySQLHelper
+    {
+        $this->setFields($deleteFields, 'DELETE')
+            ->setJoinFieldsIfExists($join)
+            ->setFilterFieldsIfExists($filter);
+
+        if (!$this->isSkipArgs) {
+            $this->setArgs($filter);
+        }
+
+        if ($this->isTransactionBegin) {
+
+            $this->transactions[] = [
+                'query' => $this->queryString,
+                'args'  => $this->args,
+            ];
+
+            return $this;
+
         } else {
-            $this->statement = $this->getConnection()->executeQuery($this->queryString, $updateArgs);
-
-            $isUpdated = $this->getRowCount();
-
-            if (!boolval($isUpdated)) {
-                throw new DataBaseException("Update failed");
-            }
-
+            $this->runQuery();
         }
 
         return $this;
-
     }
 
     /**
-     * delete row query
-     *
-     * @param  array|null $deleteFields
-     * @param  array $filter
-     * @param  array|null $filters
-     * @param  array|null $join
-     *
-     * @return MySQLHelper
+     * @return void
      */
-    public function delete(?array $deleteFields = null, ?array $filter = null, ?array $args = null, ?array $join = null): MySQLHelper
-    {
-
-        $this->statement = $this->setFields($deleteFields, 'DELETE')
-            ->setJoinIfExists($join)
-            ->setFilterIsExists($filter)
-            ->getConnection()
-            ->executeQuery($this->queryString, $args);
-
-        return $this;
-    }
-
-    /**
-     * startTransaction
-     *
-     * @return MySQLHelper
-     */
-    public function startTransaction(): MySQLHelper
+    public function startTransaction(): void
     {
         $this->isTransactionBegin = true;
-
-        return $this;
     }
 
     /**
@@ -263,33 +333,29 @@ class MySQLHelper
     {
 
         try {
-            $PDOinstance = $this->getConnection()->getInstance();
-            $PDOinstance->beginTransaction();
+            $this->PDOInstance = $this->getConnection()->getInstance();
+            $this->PDOInstance->beginTransaction();
 
-            if ($this->transactions) {
-                foreach ($this->transactions as $transaction) {
-                    $statement = $PDOinstance->prepare($transaction['query']);
-                    $statement->execute($transaction['args']);
-                }
+            foreach ($this->transactions as $transaction) {
+                $statement = $this->PDOInstance->prepare($transaction['query']);
+                $statement->execute($transaction['args']);
             }
 
-            $PDOinstance->commit();
+            $this->PDOInstance->commit();
 
         } catch (Exception $e) {
-            $PDOinstance->rollBack();
+            $this->PDOInstance->rollBack();
 
             throw new DataBaseException($e->getMessage());
         }
     }
 
     /**
-     * getRowCount
-     *
      * @return int
      */
     public function getRowCount(): int
     {
-        return $this->getConnection()->rowCount(null, $this->statement);
+        return $this->runQuery()->rowCount(null, $this->statement);
     }
 
     /**
@@ -303,7 +369,8 @@ class MySQLHelper
      */
     public function getRow(int $fetchType = 2)
     {
-        $result = $this->getConnection()->fetch($this->queryString, $fetchType, $this->statement);
+
+        $result = $this->runQuery()->fetch(null, $fetchType, $this->statement);
 
         return $result ? $result : null;
 
@@ -317,9 +384,11 @@ class MySQLHelper
      *
      * @return array|null
      */
-    public function getRows(?int $fetchType = 2): ?array
+    public function getRows(int $fetchType = 2): ?array
     {
-        return $this->getConnection()->fetchAll($this->queryString, $fetchType, $this->statement);
+        $this->runQuery();
+
+        return $this->getConnection()->fetchAll(null, $fetchType, $this->statement);
 
     }
 
@@ -328,15 +397,8 @@ class MySQLHelper
      */
     public function getColumn(): ?string
     {
-        return $this->getConnection()->fetchColumn($this->queryString, $this->statement);
-    }
 
-    /**
-     * @return int|null
-     */
-    public function getInsertedId(): ?int
-    {
-        return $this->getConnection()->getLastInsertId(null, null, $this->PDOInstance);
+        return $this->runQuery()->fetchColumn(null, $this->statement);
     }
 
     /**
@@ -356,8 +418,29 @@ class MySQLHelper
      */
     private function getConnection()
     {
+        if (!$this->dbConnection) {
+            $this->dbConnection = new PDOBase;
+        }
 
-        return $this->dbConnection ?? new PDOBase;
+        return $this->dbConnection;
+    }
+
+    /**
+     * @param bool $isReturnPDOInstance
+     *
+     * @return PDOBase
+     */
+    private function runQuery(bool $isReturnPDOInstance = false): PDOBase
+    {
+
+        if ($isReturnPDOInstance) {
+            $this->PDOInstance = $this->getConnection()->executeQuery($this->queryString, $this->args, true);
+        } else {
+            $this->statement = $this->getConnection()->executeQuery($this->queryString, $this->args);
+        }
+        $this->isSkipArgs = false;
+
+        return $this->dbConnection;
     }
 
     /**
@@ -370,7 +453,7 @@ class MySQLHelper
     {
         $queryFields = null;
 
-        if (is_array($fields) && !is_null($fields)) {
+        if (is_array($fields) && !empty($fields)) {
 
             foreach ($fields as $key => $field) {
                 $key = is_string($key) ? "$key as" : '';
@@ -393,14 +476,19 @@ class MySQLHelper
     }
 
     /**
-     * insert rows query builder
-     *
-     * @param  array|null $fields
+     * @param array $rawFields
      *
      * @return MySQLHelper
      */
-    private function setInsertFileds(?array $fields): MySQLHelper
+    private function setInsertFileds(array $rawFields): MySQLHelper
     {
+
+        $fields = [];
+
+        array_walk($rawFields, function ($value, $key) use (&$fields) {
+            $param        = $this->isSkipArgs ? $value : $this->getPlaceHolder($key);
+            $fields[$key] = $param;
+        });
 
         $keys   = implode(', ', array_keys($fields));
         $values = implode(', ', array_values($fields));
@@ -412,86 +500,80 @@ class MySQLHelper
     }
 
     /**
-     * update rows query builder
-     *
-     * @param  array|null $fields
-     * @param  array|null $joinUpdateString
+     * @param array $rawFields
+     * @param string $joinUpdateString
      *
      * @return MySQLHelper
      */
-    private function setUpdateFields(?array $fields, ?string $joinUpdateString = null): MySQLHelper
+    private function setUpdateFields(array $rawFields, ?string $joinUpdateString = ""): MySQLHelper
     {
 
-        $queryFields = "";
+        $fields = "";
 
-        foreach ($fields as $key => $field) {
-            $queryFields .= "$key = $field, ";
-        }
+        array_walk($rawFields, function ($value, $key) use (&$fields) {
+            $param = $this->isSkipArgs ? $value : $this->getPlaceHolder($key);
+            $fields .= "$key =  $param, ";
+        });
 
-        $queryFields        = trim($queryFields, ', ');
-        $joinStringIfExists = $joinUpdateString ?? "";
+        $fields = trim($fields, ', ');
 
-        $this->queryString = "UPDATE {$this->dbTable} $joinStringIfExists  SET $queryFields";
+        $this->queryString = "UPDATE {$this->dbTable} $joinUpdateString SET $fields";
 
         return $this;
     }
 
     /**
-     * condition statement query builder
-     *
-     * @param  array|null $filter
+     * @param array|null $filter
      *
      * @return MySQLHelper
      */
-    private function setFilterIsExists(?array $filter): MySQLHelper
+    private function setFilterFieldsIfExists(?array $filter = null): MySQLHelper
     {
 
-        if (empty($filter)) {
-            return $this;
-        } else {
-            $filterStroke = 'WHERE ';
-            $glue         = 'AND';
-            $comparsion   = null;
-
-            foreach ($filter as $key => $field) {
-                if (preg_match("/^[^\w\s:']+/", $field, $match)) {
-                    $comparsion = $this->getFilterComparsion($match[0]);
-
-                    $field = ($match[0] == "()")
-                    ? str_replace($match[0], null, "($field)")
-                    : str_replace($match[0], null, $field);
-
-                } else {
-                    $comparsion = "=";
-                }
-
-                $filterStroke .= "$key $comparsion $field $glue ";
-            }
-
-            $filterStroke = trim($filterStroke, "$glue ");
-            $filterStroke = str_replace('OR AND', "OR", $filterStroke);
-
-            $this->queryString .= " $filterStroke";
-
+        if (!$filter) {
             return $this;
         }
+
+        $filterStroke = 'WHERE ';
+        $glue         = ' AND ';
+        $comparsion   = null;
+
+        foreach ($filter as $key => $field) {
+
+            if (preg_match("/^[^\w\s:']+/", $field, $match)) {
+                $comparsion = $this->getFilterComparsion($match[0]);
+
+                $field = ($match[0] == "()")
+                ? str_replace($match[0], null, "($field)")
+                : str_replace($match[0], null, $field);
+
+            } else {
+                $comparsion = "=";
+            }
+
+            $param = $this->isSkipArgs ? $field : $this->getPlaceHolder($key);
+            $filterStroke .= "$key $comparsion $param $glue";
+        }
+
+        $filterStroke = str_replace('OR AND', "OR", trim($filterStroke, "$glue"));
+
+        $this->queryString .= " $filterStroke";
+
+        return $this;
     }
 
     /**
-     * joint statement query builder
-     *
-     * @param  array|null $join
-     * @param  bool $isJoinUpdate
+     * @param array|null $join
+     * @param bool $isJoinUpdate
      *
      * @return MySQLHelper|string
      */
-    private function setJoinIfExists(?array $join = null, bool $isJoinUpdate = false)
+    private function setJoinFieldsIfExists(?array $join = null, bool $isJoinUpdate = false)
     {
 
-        if (is_null($join)) {
+        if (!$join) {
             return $this;
         } else {
-
             $joinStroke = "";
             $glue       = "LEFT JOIN";
 
@@ -518,74 +600,32 @@ class MySQLHelper
     }
 
     /**
-     * order statement query builder
-     *
-     * @param  array|null $sort
-     *
-     * @return MySQLHelper
-     */
-    private function setSortIfExists(?array $sort): MySQLHelper
-    {
-
-        if (is_null($sort)) {
-            return $this;
-        } else {
-            $sortStroke = "ORDER BY ";
-
-            foreach ($sort as $key => $field) {
-                $sortStroke .= "$key $field, ";
-
-            }
-
-            $sortStroke = trim($sortStroke, ', ');
-            $this->queryString .= " $sortStroke";
-
-            return $this;
-        }
-    }
-
-    /**
-     * group by query builder
-     *
-     * @param  mixed $group
-     *
-     * @return MySQLHelper
-     */
-    private function setGroupFieldsIfExists(?array $group): MySQLHelper
-    {
-        if (is_null($group)) {
-            return $this;
-        } else {
-            $groupStroke = null;
-
-            foreach ($group as $field) {
-                $groupStroke .= "GROUP BY $field, ";
-            }
-
-            $groupStroke = trim($groupStroke, ', ');
-            $this->queryString .= " $groupStroke";
-
-            return $this;
-        }
-    }
-
-    /**
-     * limit rows query builder
-     *
-     * @param  int $limiter
+     * @param array|null $rawArgs
      *
      * @return void
      */
-    private function setLimitIfExists(?int $limiter)
+    private function setArgs(?array $rawArgs): void
     {
-        if (is_null($limiter)) {
-            return $this;
-        } else {
-            $limitStroke = "LIMIT $limiter";
-            $this->queryString .= " $limitStroke";
-
-            return $this;
+        if (!$rawArgs) {
+            return;
         }
+
+        unset($this->args);
+
+        foreach ($rawArgs as $key => $value) {
+            $this->args[$this->getPlaceHolder($key)] = trim(preg_replace("/[^\w\s.,\/]/u", "", $value));
+        }
+    }
+
+    /**
+     * @param string $param
+     *
+     * @return string
+     */
+    private function getPlaceHolder(string $param): string
+    {
+        return ":" . preg_replace("/[\W_]/", "_$1", $param);
+
     }
 
     /**
@@ -600,28 +640,28 @@ class MySQLHelper
 
         switch ($comparsion) {
             case '<>':
-                return "BETWEEN ";
+                return "BETWEEN";
 
             case "!!":
-                return "IS NOT NULL ";
+                return "IS NOT NULL";
 
             case "()":
-                return "IN ";
+                return "IN";
 
             case "!()":
-                return "NOT IN ";
+                return "NOT IN";
 
             case "%%":
-                return "LIKE ";
+                return "LIKE";
 
             case "<=":
-                return "<= ";
+                return "<=";
 
             case ">=":
                 return ">= ";
 
             case "!=":
-                return "!= ";
+                return "!=";
 
             default:
                 return '';

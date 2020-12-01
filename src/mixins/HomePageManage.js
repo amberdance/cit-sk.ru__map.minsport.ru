@@ -33,7 +33,6 @@ export default {
 
       if (!this.placemarks.length) return this.$onWarning('Объекты не найдены')
     } catch (e) {
-      console.log(e)
       this.$onError(
         'К сожалению, мне не удалось проинициализировать карту',
         5000

@@ -202,7 +202,6 @@ export default {
       //   return;
       // }
 
-      console.log(this.placemarksCollection)
 
       this.$isLoading()
       this.hideMultiRoute()

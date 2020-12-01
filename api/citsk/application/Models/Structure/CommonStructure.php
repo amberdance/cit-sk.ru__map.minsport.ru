@@ -51,9 +51,9 @@ class CommonStructure extends Structure
             $this->structure[] = [
                 "id"        => $index,
                 "serviceId" => (int) $row['id'],
-                "value"     => Shared::getDataType($row['data_type'], $row['value']),
                 "label"     => $row['label'],
                 "code"      => $row['code'],
+                "value"     => isset($row['value']) ? Shared::getDataType($row['data_type'], $row['value']) : null,
             ];
 
             $index++;

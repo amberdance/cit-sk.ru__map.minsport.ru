@@ -23,7 +23,7 @@ export default {
 
   computed: {
     geoLabels () {
-      return this.$store.getters['hall/get']('geoLabels')
+      return this.$store.getters['hall/geoLabels']
     }
   },
 
@@ -33,34 +33,10 @@ export default {
 
   methods: {
     async loadGeolabel () {
-      try {
-        await this.$store.dispatch('hall/loadData', {
-          route: 'geo-labels',
-          state: 'geoLabels'
-        })
-      } catch (e) {
-
-      }
-    },
-
-    async remoteSearch (query) {
-      try {
-        this.isLoading = true
-
-        if (!query || query.length < 2) {
-          this.searchMatches = []
-          return
-        }
-
-        this.searchMatches = await this.$HTTPPost({
-          route: '/geoobject/get-placemarks',
-          payload: { keywords: query }
-        })
-      } catch (e) {
-        return
-      } finally {
-        this.isLoading = false
-      }
+      await this.$store.dispatch('hall/loadData', {
+        route: 'geo-labels',
+        state: 'geoLabels'
+      })
     },
 
     async handleSubmit (isUpdatePage = false) {

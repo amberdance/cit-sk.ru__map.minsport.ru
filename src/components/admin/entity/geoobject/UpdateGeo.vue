@@ -180,7 +180,6 @@ export default {
         this.geoobject.properties = this.$refs.entityProperties.getUpdateFields()
         this.geoobject.properties.videogallery = this.$refs.entityVideo.getVideos()
 
-        console.log(this.geoobject.properties, this.properties)
         if (!this.geoobject.properties.videogallery) { delete this.geoobject.properties.videogallery }
 
         await this.$store.dispatch('geoobject/update', {

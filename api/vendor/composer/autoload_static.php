@@ -62,6 +62,7 @@ class ComposerStaticInitbf49404e0d6ee05f655f488e6e3a7576
         'Citsk\\Controllers\\CommonController' => __DIR__ . '/../..' . '/citsk/application/Controllers/CommonController.php',
         'Citsk\\Controllers\\Controller' => __DIR__ . '/../..' . '/citsk/application/Controllers/Controller.php',
         'Citsk\\Controllers\\DistrictController' => __DIR__ . '/../..' . '/citsk/application/Controllers/DistrictController.php',
+        'Citsk\\Controllers\\FileController' => __DIR__ . '/../..' . '/citsk/application/Controllers/FileController.php',
         'Citsk\\Controllers\\GeoobjectController' => __DIR__ . '/../..' . '/citsk/application/Controllers/GeoobjectController.php',
         'Citsk\\Controllers\\HallController' => __DIR__ . '/../..' . '/citsk/application/Controllers/HallController.php',
         'Citsk\\Controllers\\MultiRouteController' => __DIR__ . '/../..' . '/citsk/application/Controllers/MultiRouteController.php',

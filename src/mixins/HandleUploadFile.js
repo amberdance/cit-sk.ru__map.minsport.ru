@@ -36,6 +36,8 @@ export default {
 
           await this.sendFiles(formData)
 
+          if (this.isUpdatePage) return
+
           this.isFileChanged = false
           this.previewImage = []
           this.$refs.upload1.clearFiles()
@@ -52,6 +54,8 @@ export default {
 
           await this.sendFiles(formData)
 
+          if (this.isUpdatePage) return
+
           this.isFilesChanged = false
           this.fileList = []
           this.$refs.upload2.clearFiles()
@@ -65,7 +69,7 @@ export default {
 
     async sendFiles (payload) {
       await this.$HTTPPost({
-        route: `/${this.entity}/upload-file`,
+        route: `${this.entity}/upload-file`,
         payload
       })
     },
@@ -75,7 +79,7 @@ export default {
         this.$isLoading()
 
         await this.$HTTPPost({
-          route: `/${this.entity}/detach-file`,
+          route: `${this.entity}/detach-file`,
           payload: {
             id
           }
@@ -104,7 +108,7 @@ export default {
 
     async handleVideogalleryRemove (file) {
       this.videogallery = this.videogallery.filter(
-        (item) => item.uid !== file.uid
+        item => item.uid !== file.uid
       )
 
       this.isVideoGalleryChanged = false
@@ -120,7 +124,7 @@ export default {
     },
 
     async handleRemoveMultiple (file) {
-      this.fileList = this.fileList.filter((item) => item.uid !== file.uid)
+      this.fileList = this.fileList.filter(item => item.uid !== file.uid)
       this.isFilesChanged = false
 
       if (this.isUpdatePage) await this.detachFile(file.id)

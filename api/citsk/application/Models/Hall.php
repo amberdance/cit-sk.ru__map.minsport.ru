@@ -2,6 +2,7 @@
 
 namespace Citsk\Models;
 
+use Citsk\Models\Structure\CommonStructure;
 use Citsk\Models\Structure\HallStructure;
 
 final class Hall extends CommonModel
@@ -38,7 +39,6 @@ final class Hall extends CommonModel
         ];
 
         $filter = null;
-        $args   = null;
 
         $join = [
             "geo_items gi"         => "gi.id = hi.geo_id",
@@ -50,11 +50,7 @@ final class Hall extends CommonModel
 
         if (isset($_GET['id'])) {
             $filter = [
-                "gi.id" => ":id",
-            ];
-
-            $args = [
-                ":id" => $_GET['id'],
+                "gi.id" => $_GET['id'],
             ];
         }
 
@@ -66,7 +62,7 @@ final class Hall extends CommonModel
 
         $result = $this->database
             ->setDbTable("hall_items hi")
-            ->getList($select, $filter, $args, $join)
+            ->getList($select, $filter, $join)
             ->getRows();
 
         foreach ($result as $key => $value) {
@@ -80,11 +76,9 @@ final class Hall extends CommonModel
     }
 
     /**
-     * @param int $id
-     *
-     * @return array
+     * @return CommonStructure
      */
-    public function getGeoLabels(): array
+    public function getGeoLabels(): CommonStructure
     {
         $select = [
             "id",
@@ -99,10 +93,12 @@ final class Hall extends CommonModel
             ];
         }
 
-        return $this->database
+        $rows = $this->database
             ->setDbTable("geo_items")
             ->getList($select, $filter)
             ->getRows();
+
+        return new CommonStructure($rows);
     }
 
     /**
@@ -112,19 +108,14 @@ final class Hall extends CommonModel
     {
 
         $insert = [
-            "geo_id"           => ":id",
-            "label"            => ":label",
+            "geo_id"           => $_POST['geoId'],
+            "label"            => $_POST['label'],
             "publish_state_id" => $this->user->isAdmin ? 1 : 2,
-        ];
-
-        $args = [
-            ":id"    => $_POST['geoId'],
-            ":label" => $_POST['label'],
         ];
 
         $hallId = $this->database
             ->setDbTable("hall_items")
-            ->add($insert, $args, true)
+            ->add($insert)
             ->getInsertedId();
 
         return $hallId;
@@ -132,31 +123,44 @@ final class Hall extends CommonModel
     }
 
     /**
-     * @return Hall
+     * @param int $hallId
+     * @param array $params
+     *
+     * @return void
      */
-    public function updateHall(): Hall
+    public function updateHall(int $hallId, array $params): void
     {
 
         $update = [
-            "label"  => ":label",
-            "geo_id" => ":geoId",
+            "label"  => $params['label'],
+            "geo_id" => $params['geo_id'],
         ];
 
         $filter = [
-            "id" => ":id",
-        ];
-
-        $args = [
-            ":id"    => $_POST['id'],
-            ":label" => trim($_POST['label']),
-            ":geoId" => $_POST['geoId'],
+            "id" => $hallId,
         ];
 
         $this->database
             ->setDbTable("hall_items")
-            ->update($update, $filter, $args);
+            ->update($update, $filter);
 
-        return $this;
+    }
+
+    /**
+     * @param int $geoId
+     *
+     * @return int
+     */
+    public function getHallIdByGeoId(int $geoId): int
+    {
+
+        $id = $this->database
+            ->setDbTable("hall_items")
+            ->getList("id", ["geo_id" => $geoId])
+            ->setLimit(1)
+            ->getColumn();
+
+        return intval($id);
 
     }
 }

@@ -6,6 +6,7 @@ use Citsk\Controllers\Controller;
 use Citsk\Interfaces\Controllerable;
 use Citsk\Library\Identity;
 use Citsk\Models\CommonModel;
+use Citsk\Models\Hall;
 
 final class CommonController extends Controller implements Controllerable
 {
@@ -52,13 +53,33 @@ final class CommonController extends Controller implements Controllerable
 
         if (is_array($_POST['id'])) {
             array_walk($_POST['id'], function ($id) use (&$entity) {
-                $this->model->setPublishState($entity, $id, $_POST['stateId']);
+                $this->setStateCallback($entity, $id, $_POST['stateId']);
             });
         } else {
-            $this->model->setPublishState($entity, $_POST['id'], $_POST['stateId']);
+            $this->setStateCallback($entity, $_POST['id'], $_POST['stateId']);
         }
 
         $this->successResponse();
+    }
+
+    /**
+     * @param string $entity
+     * @param int $id
+     * @param int $stateId
+     *
+     * @return void
+     */
+    private function setStateCallback(string $entity, int $id, int $stateId): void
+    {
+
+        $this->model->setPublishState($entity, $id, $stateId);
+
+        if ($entity == 'geo') {
+            $hall   = new Hall;
+            $hallId = $hall->getHallIdByGeoId($id);
+
+            $this->model->setPublishState('hall', $hallId, $stateId);
+        }
     }
 
 }

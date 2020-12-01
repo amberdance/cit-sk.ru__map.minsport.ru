@@ -124,7 +124,7 @@ export default {
         if (!this.route.properties.videogallery) { delete this.route.properties.videogallery }
 
         await this.$store.dispatch('route/update', {
-          route: '/route/update-route',
+          route: '/route/update',
           payload: this.route
         })
 

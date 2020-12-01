@@ -61,142 +61,119 @@ class CommonModel
     public function setPublishState(string $entity, int $itemId, int $stateId): void
     {
         $update = [
-            "publish_state_id" => ":stateId",
+            "publish_state_id" => $stateId,
         ];
 
         $filter = [
-            "id" => ":id",
-        ];
-
-        $args = [
-            ":id"      => $itemId,
-            ":stateId" => $stateId,
+            "id" => $itemId,
         ];
 
         if ($stateId == 1) {
-            $update['published'] = "CURRENT_TIMESTAMP()";
+            $update['published'] = Shared::currentTimestamp();
         }
 
         if ($stateId == 4) {
-            $update['deleted'] = "CURRENT_TIMESTAMP()";
+            $update['deleted'] = Shared::currentTimestamp();
         }
 
         $this->database
             ->setDbTable("{$entity}_items")
-            ->update($update, $filter, $args);
+            ->update($update, $filter);
     }
 
     /**
-     * @return void
+     * @param int $entityId
+     *
+     * @return bool
      */
-    public function removeItem(?int $id = null): void
+    public function hasFiles(int $entityId): bool
     {
-
-        $this->database->setDbTable("{$this->entity}_items item");
-
-        $delete = [
-            "item, prop",
-        ];
-
         $filter = [
-            "item.id" => ":id",
-        ];
-
-        $args = null;
-
-        $join = [
-            "{$this->entity}_property prop" => "prop.{$this->entity}_id = item.id",
-        ];
-
-        if ($this->entity == 'geo') {
-            $delete[]                   = 'cat';
-            $join['category_items cat'] = "cat.geo_id = item.id";
-        }
-
-        if ($this->entity == 'multiroute') {
-            $delete[]                   = 'geo';
-            $join['multiroute_geo geo'] = "geo.multiroute_id = item.id";
-        }
-
-        if (is_array($_POST['id'])) {
-
-            array_walk($_POST['id'], function ($id) use ($delete, $filter, $args, $join) {
-
-                $args = [
-                    ":id" => $id,
-                ];
-
-                $this->database->delete($delete, $filter, $args, $join);
-            });
-
-        } else {
-            $args = [
-                ":id" => $id ?? $_POST['id'],
-            ];
-
-            $this->database->delete($delete, $filter, $args, $join);
-        }
-
-    }
-
-    /**
-     * @return CommonModel
-     */
-    public function removeFileByEntityId(): CommonModel
-    {
-
-        $this->database->setDbTable("files fs");
-
-        $delete = [
-            "fs",
-        ];
-
-        $filter = [
-            "prop.{$this->entity}_id" => ":id",
-        ];
-
-        $args = [
-            ":id" => $_POST['id'],
+            "prop.{$this->entity}_id" => $entityId,
         ];
 
         $join = [
             "{$this->entity}_property prop" => "prop.value = fs.id",
         ];
 
-        if (is_array($_POST['id'])) {
+        $hasFile = $this->database
+            ->setDbTable("files fs")
+            ->getList("fs.id", $filter, $join)
+            ->getRowCount();
 
-            foreach ($_POST['id'] as $id) {
-
-                $args[':id'] = $id;
-                $directory   = $this->getFileDirectory($id);
-
-                array_walk($directory, function ($dir) {
-                    Shared::removeDirectory($dir);
-                });
-
-                $this->database->delete($delete, $filter, $args, $join);
-
-            }
-        } else {
-            $directory = $this->getFileDirectory($_POST['id']);
-
-            array_walk($directory, function ($dir) {
-                Shared::removeDirectory($dir);
-            });
-
-            $this->database->delete($delete, $filter, $args, $join);
-
-        }
-
-        return $this;
+        return boolval($hasFile);
     }
 
     /**
-     * @param array $fileMeta
+     * @param int $id
      *
      * @return void
      */
-    public function writeFilePathToDatabase(array $fileMeta): void
+    public function removeItem(int $id): void
+    {
+
+        $this->database->setDbTable("{$this->entity}_items item");
+
+        $delete = "item, prop";
+
+        $filter = [
+            "item.id" => $id,
+        ];
+
+        $join = [
+            "{$this->entity}_property prop" => "prop.{$this->entity}_id = item.id",
+        ];
+
+        if ($this->entity == 'geo') {
+            $delete .= ' ,cat';
+            $join['category_items cat'] = "cat.geo_id = item.id";
+        }
+
+        if ($this->entity == 'multiroute') {
+            $delete .= ' ,geo';
+            $join['multiroute_geo geo'] = "geo.multiroute_id = item.id";
+        }
+
+        $this->database->delete($delete, $filter, $join);
+
+    }
+
+    /**
+     * @param int $entityId
+     *
+     * @return void
+     */
+    public function removeFileByEntityId(int $entityId): void
+    {
+
+        $delete = "fs, prop";
+
+        $filter = [
+            "prop.{$this->entity}_id" => $entityId,
+        ];
+
+        $join = [
+            "{$this->entity}_property prop" => "prop.value = fs.id",
+        ];
+
+        $this->database->setDbTable("files fs");
+        $fileDir = $this->getFileDirectory($entityId);
+
+        array_walk($fileDir, function ($dir) {
+            Shared::removeDirectory(UPLOADS_DIR . $dir);
+        });
+
+        $this->database->delete($delete, $filter, $join);
+    }
+
+    /**
+     * @param int $id
+     * @param array $fileMeta
+     * @param string $propertyCode
+     *
+     * @return void
+     */
+    public function writeFilePathToDatabase(int $id, array $fileMeta, string $propertyCode): void
     {
 
         $fileId = null;
@@ -205,61 +182,53 @@ class CommonModel
 
             // file table insert
             $insert = [
-                "file_name"     => "'{$file['file_name']}'",
-                "original_name" => "'{$file['original_name']}'",
-                "sub_dir"       => "'{$file['sub_dir']}'",
-                "mime_type"     => "'{$file['type']}'",
+                "file_name"     => $file['file_name'],
+                "original_name" => $file['original_name'],
+                "sub_dir"       => $file['sub_dir'],
+                "mime_type"     => $file['type'],
                 "size"          => $file['size'],
             ];
 
             $fileId = $this->database
                 ->setDbTable("files")
-                ->add($insert, null, true)
+                ->add($insert)
                 ->getInsertedID();
 
             // property table insert
             $insert = [
-                "{$this->entity}_id" => ":id",
+                "{$this->entity}_id" => $id,
                 "value"              => $fileId,
-                "meta_id"            => "(SELECT id FROM {$this->entity}_meta WHERE code = :code)",
+                "meta_id"            => $this->getEntityMetaIdByPropertyCode($propertyCode),
             ];
 
-            $args = [
-                ":id"   => $_POST['id'],
-                ":code" => "{$_POST['propertyCode']}",
-            ];
-
-            $this->database
-                ->setDbTable("{$this->entity}_property")
-                ->add($insert, $args);
+            $this->database->setDbTable("{$this->entity}_property")->add($insert);
         }
     }
 
     /**
+     * @param int $fileId
+     *
      * @return void
      */
-    public function removeFileById(): void
+    public function removeFileById(int $fileId): void
     {
 
-        $fileMeta              = $this->getFileMetaById($_POST['id']);
-        $fullPath              = UPLOADS_DIR . "/{$fileMeta['sub_dir']}";
-        $countFilesInDirectory = count(scandir($fullPath)) - 2;
+        $fileMeta   = $this->getFileMetaById($fileId);
+        $directory  = UPLOADS_DIR . $fileMeta['sub_dir'];
+        $filesCount = count(scandir($directory)) - 2;
 
-        if ($countFilesInDirectory > 1) {
-            unlink("$fullPath/{$fileMeta['file_name']}");
-        } else {
-            Shared::removeDirectory($fullPath);
+        if ($filesCount > 1) {
+            unlink("$directory/{$fileMeta['file_name']}");
         }
 
-        $delete = [
-            "fs, prop",
-        ];
+        if ($filesCount == 1) {
+            Shared::removeDirectory($directory);
+        }
+
+        $delete = "fs, prop";
 
         $filter = [
-            "fs.id" => ":id"];
-
-        $args = [
-            ":id" => $_POST['id'],
+            "fs.id" => $fileId,
         ];
 
         $join = [
@@ -268,20 +237,21 @@ class CommonModel
 
         $this->database
             ->setDbTable("{$this->entity}_property prop")
-            ->delete($delete, $filter, $args, $join);
+            ->delete($delete, $filter, $join);
     }
 
     /**
-     * @param string|null $id
+     * @param int|null $id
      * @param int|null $limit
-     * @param bool $isServiceFields
      *
      * @return CommonStructure
      */
-    public function getProperties(?string $id = null, ?int $limit = null): CommonStructure
+    public function getProperties(?int $id = null, ?int $limit = null): CommonStructure
     {
 
-        $tableName = $id ? "{$this->entity}_property prop" : "{$this->entity}_meta meta";
+        $tableName = $id
+        ? "{$this->entity}_property prop"
+        : "{$this->entity}_meta meta";
 
         $select = [
             "meta.label",
@@ -291,15 +261,10 @@ class CommonModel
 
         $filter = [
             "meta.is_active"    => 1,
-            "meta.content_type" => "!= 'media'",
+            "meta.content_type" => "!= media",
         ];
 
-        $args = null;
         $join = null;
-
-        $sort = [
-            "meta.sort" => "ASC",
-        ];
 
         if ($id) {
             $select = array_merge($select, [
@@ -307,12 +272,8 @@ class CommonModel
                 "prop.value",
             ]);
 
-            $args = [
-                ":id" => $id,
-            ];
-
-            $filter["prop.{$this->entity}_id"] = ":id";
-            $filter["prop.value"]              = "!= '0'";
+            $filter["prop.{$this->entity}_id"] = $id;
+            $filter["prop.value"]              = "!= 0";
 
             $join = [
                 "{$this->entity}_meta meta" => "meta.id = prop.meta_id",
@@ -321,7 +282,9 @@ class CommonModel
 
         $rows = $this->database
             ->setDbTable($tableName)
-            ->getList($select, $filter, $args, $join, null, $sort, $limit)
+            ->getList($select, $filter, $join)
+            ->setSorting(["meta.sort" => "ASC"])
+            ->setLimit($limit)
             ->getRows();
 
         return new CommonStructure($rows, 'theProperty');
@@ -344,110 +307,72 @@ class CommonModel
 
     /**
      * @param int $id
+     * @param array $rawProperties
      *
-     * @return CommonModel
+     * @return void
      */
-    public function addProperty(int $id): CommonModel
+    public function addProperty(int $id, array $rawProperties): void
     {
 
-        if (empty($_POST['properties'])) {
-            return $this;
-        }
+        $properties = $rawProperties;
+        ksort($properties);
 
-        $property = $_POST['properties'];
-        ksort($property);
-
-        $splittedMetaCodes = implode(",", array_keys($property));
-        $splittedMetaCodes = str_replace(",", "','", $splittedMetaCodes);
-
-        $entityMeta = $this->getEntityMeta($splittedMetaCodes);
-
-        $insert = [];
-        $args   = [];
+        $insert     = [];
+        $entityMeta = $this->getEntityMeta($properties);
 
         $this->database->setDbTable("{$this->entity}_property");
 
         for ($i = 0; $i < count($entityMeta); $i++) {
 
-            if (isset($_POST['properties']['videogallery']) && $entityMeta[$i]['code'] == 'videogallery') {
-                $this->addVideogallery($id);
-
-                continue;
-            }
-
-            $value = array_values($property)[$i];
-
+            $value  = array_values($properties)[$i];
             $insert = [
-                "{$this->entity}_id" => ":id",
-                "meta_id"            => ":metaId",
-                "value"              => ":value",
+                "{$this->entity}_id" => $id,
+                "meta_id"            => $entityMeta[$i]['id'],
+                "value"              => $value,
             ];
 
-            $args = [
-                ":id"     => $id,
-                ":metaId" => $entityMeta[$i]['id'],
-                ":value"  => $value,
-            ];
-
-            $this->database->add($insert, $args);
+            $this->database->add($insert);
         }
-
-        return $this;
     }
 
     /**
-     * @return CommonModel
+     * @param int $id
+     * @param array $properties
+     *
+     * @return void
      */
-    public function updateProperty(): CommonModel
+    public function updateProperty(int $id, array $properties): void
     {
 
-        $select = [
-            "prop.value",
-        ];
+        $select = "prop.value";
 
         $join = [
             "{$this->entity}_meta meta" => "meta.id = prop.meta_id",
         ];
 
-        $args = [
-            ":id" => $_POST['id'],
-        ];
-
-        foreach ($_POST['properties'] as $propertyCode => $propertyValue) {
-
-            if ($propertyCode == 'videogallery') {
-                $this->updateVideogallery();
-                continue;
-            }
+        foreach ($properties as $propertyCode => $propertyValue) {
 
             if (gettype($propertyValue) == 'boolean') {
                 $propertyValue = $propertyValue ? '1' : '0';
             }
 
             $update = [
-                "prop.value" => "'$propertyValue'",
+                "prop.value" => $propertyValue,
             ];
 
             $filter = [
-                "prop.{$this->entity}_id" => ":id",
-                "meta.code"               => "'$propertyCode'",
+                "prop.{$this->entity}_id" => $id,
+                "meta.code"               => $propertyCode,
             ];
+            $this->database->setDbTable("{$this->entity}_property prop");
+            $isFieldExists = $this->database->getList($select, $filter, $join)->getRowCount();
 
-            $isFieldExists = $this->database
-                ->setDbTable("{$this->entity}_property prop")
-                ->getList($select, $filter, $args, $join)
-                ->getRowCount();
-
-            if ($isFieldExists) {
-                $this->database
-                    ->setDbTable("{$this->entity}_property prop")
-                    ->update($update, $filter, $args, $join);
+            if (boolval($isFieldExists)) {
+                $this->database->update($update, $filter, $join);
             } else {
-                $this->addPropertyByMetaCode($propertyCode, $propertyValue);
+                $this->addPropertyByMetaCode($id, $propertyCode, $propertyValue);
             }
         }
-
-        return $this;
     }
 
     /**
@@ -459,26 +384,44 @@ class CommonModel
     {
 
         $filter = [
-            "id" => ":id",
-        ];
-
-        $args = [
-            ":id" => $id,
+            "id" => $id,
         ];
 
         if ($this->entity == 'hall') {
             $filter = [
-                "geo_id" => ":id",
+                "geo_id" => $id,
             ];
         }
 
         $isDraft = $this->database
             ->setDbTable("{$this->entity}_items")
-            ->getList("publish_state_id", $filter, $args)
+            ->getList("publish_state_id", $filter)
             ->getColumn();
 
-        return intval($isDraft == 2) ? true : false;
+        return intval($isDraft > 1) ? true : false;
 
+    }
+
+    /**
+     * @param int $id
+     * @param array|null $videoGallery
+     *
+     * @return void
+     */
+    public function updateVideogallery(int $id, ?array $videoGallery): void
+    {
+        $filter = [
+            "{$this->entity}_id" => $id,
+            "meta_id"            => $this->getEntityMetaIdByPropertyCode('videogallery'),
+        ];
+
+        $this->database
+            ->setDbTable("{$this->entity}_property")
+            ->delete(null, $filter);
+
+        if (is_array($videoGallery)) {
+            $this->addVideogallery($id, $videoGallery);
+        }
     }
 
     /**
@@ -501,21 +444,14 @@ class CommonModel
         ];
 
         $filter = [
-            "prop.{$this->entity}_id" => ":id",
-            "meta.code"               => "'preview_image'",
-        ];
-
-        $args = [
-            ":id" => $id,
-        ];
-
-        $order = [
-            "id" => "DESC",
+            "prop.{$this->entity}_id" => $id,
+            "meta.code"               => "preview_image",
         ];
 
         $rows = $this->database
             ->setDbTable("{$this->entity}_property prop")
-            ->getList($select, $filter, $args, $join, null, $order)
+            ->getList($select, $filter, $join)
+            ->setSorting(["id" => "DESC"])
             ->getRows();
 
         return new CommonStructure($rows, 'thePhotogallery');
@@ -534,12 +470,8 @@ class CommonModel
         ];
 
         $filter = [
-            "prop.{$this->entity}_id" => ":id",
-            "meta.code"               => "'photogallery'",
-        ];
-
-        $args = [
-            ":id" => $id,
+            "prop.{$this->entity}_id" => $id,
+            "meta.code"               => "photogallery",
         ];
 
         $join = [
@@ -549,7 +481,7 @@ class CommonModel
 
         $rows = $this->database
             ->setDbTable("{$this->entity}_property prop")
-            ->getList($select, $filter, $args, $join)
+            ->getList($select, $filter, $join)
             ->getRows();
 
         return new CommonStructure($rows, 'thePhotogallery');
@@ -568,67 +500,39 @@ class CommonModel
             "value",
         ];
 
-        $args = [
-            ":id" => $id,
-        ];
-
         $filter = [
-            "{$this->entity}_id" => ":id",
-            "meta_id"            => " (SELECT id FROM {$this->entity}_meta WHERE code = 'videogallery')",
+            "{$this->entity}_id" => $id,
+            "meta_id"            => $this->getEntityMetaIdByPropertyCode('videogallery'),
         ];
 
         $rows = $this->database
             ->setDbTable("{$this->entity}_property")
-            ->getList($select, $filter, $args)
+            ->getList($select, $filter)
             ->getRows(7);
 
-        return new CommonStructure($rows, 'theVideogallery', );
+        return new CommonStructure($rows, 'theVideogallery');
     }
 
     /**
      * @param int $id
-     * @param string $entity
+     * @param array $youtubeLinks
      *
      * @return void
      */
-    protected function addVideogallery(?int $id = null): void
+    public function addVideogallery(int $id, array $youtubeLinks): void
     {
 
         $insert = [
-            "{$this->entity}_id" => $id ?? $_POST['id'],
-            "meta_id"            => " (SELECT id FROM {$this->entity}_meta WHERE code = 'videogallery')",
+            "{$this->entity}_id" => $id,
+            "meta_id"            => $this->getEntityMetaIdByPropertyCode('videogallery'),
         ];
 
-        foreach ($_POST['properties']['videogallery'] as $src) {
-            $insert["value"] = "'$src'";
+        $this->database->setDbTable("{$this->entity}_property");
 
-            $this->database
-                ->setDbTable("{$this->entity}_property")
-                ->add($insert);
-        }
-    }
-
-    /**
-     * @return void
-     */
-    protected function updateVideogallery(?int $id = null): void
-    {
-        $filter = [
-            "{$this->entity}_id" => ':id',
-            "meta_id"            => " (SELECT id FROM {$this->entity}_meta WHERE code = 'videogallery')",
-        ];
-
-        $args = [
-            ':id' => $id ?? $_POST['id'],
-        ];
-
-        $this->database
-            ->setDbTable("{$this->entity}_property")
-            ->delete(null, $filter, $args);
-
-        if (count($_POST['properties']['videogallery'])) {
-            $this->addVideogallery();
-        }
+        array_walk($youtubeLinks, function ($link) use (&$insert) {
+            $insert["value"] = $link;
+            $this->database->add($insert);
+        });
     }
 
     /**
@@ -639,16 +543,10 @@ class CommonModel
     private function getFileDirectory(int $id): ?array
     {
 
-        $selectGroup = [
-            "fs.sub_dir",
-        ];
+        $select = "fs.sub_dir";
 
         $filter = [
-            "prop.{$this->entity}_id" => ":id",
-        ];
-
-        $args = [
-            ":id" => $id,
+            "prop.{$this->entity}_id" => $id,
         ];
 
         $join = [
@@ -657,7 +555,7 @@ class CommonModel
 
         $rows = $this->database
             ->setDbTable("files fs")
-            ->getList($selectGroup, $filter, $args, $join, $selectGroup)
+            ->getList($select, $filter, $join)
             ->getRows(7);
 
         return $rows;
@@ -671,44 +569,59 @@ class CommonModel
     private function getFileName(?int $id = null): ?string
     {
 
-        $selectField = ["file_name"];
-        $args        = ["id" => ":id"];
-        $filters     = [":id" => $id ?? $_POST['fileId'] ?? $_POST['id'] ?? $_GET['id']];
+        $selectField = [
+            "file_name",
+        ];
+
+        $filters = [
+            "id" => $id ?? $_POST['fileId'] ?? $_POST['id'] ?? $_GET['id'],
+        ];
 
         return $this->database
             ->setDbTable('files')
-            ->getList($selectField, $args, $filters)
+            ->getList($selectField, $filters)
             ->getColumn();
     }
 
     /**
-     * @param string $metaCode
+     * @param int $id
+     * @param string $propertyCode
      * @param string|null $propertyValue
      *
-     * @return bool
+     * @return void
      */
-    private function addPropertyByMetaCode(string $metaCode, ?string $propertyValue): ?bool
+    private function addPropertyByMetaCode(int $id, string $propertyCode, ?string $propertyValue): void
     {
         if (!trim($propertyValue)) {
-            return false;
+            return;
         }
 
         $insert = [
-            "{$this->entity}_id" => ":id",
-            "value"              => ":value",
-            "meta_id"            => "(SELECT id FROM {$this->entity}_meta WHERE code = '$metaCode')",
+            "{$this->entity}_id" => $id,
+            "value"              => $propertyValue,
+            "meta_id"            => $this->getEntityMetaIdByPropertyCode($propertyCode),
         ];
 
-        $args = [
-            ":id"    => $_POST['id'],
-            ":value" => $propertyValue,
+        $this->database->setDbTable("{$this->entity}_property")->add($insert);
+    }
+
+    /**
+     * @param string $propertyCode
+     *
+     * @return int
+     */
+    private function getEntityMetaIdByPropertyCode(string $propertyCode): int
+    {
+        $filter = [
+            "code" => $propertyCode,
         ];
 
-        $this->database
-            ->setDbTable("{$this->entity}_property")
-            ->add($insert, $args);
+        $id = $this->database
+            ->setDbTable("{$this->entity}_meta")
+            ->getList("id", $filter)
+            ->getColumn();
 
-        return true;
+        return intval($id);
     }
 
     /**
@@ -728,11 +641,13 @@ class CommonModel
             "original_name",
         ];
 
-        $args = ["id" => $fileId];
+        $filter = [
+            "id" => $fileId,
+        ];
 
         $fileMeta = $this->database
             ->setDbTable("files")
-            ->getList($select, $args)
+            ->getList($select, $filter)
             ->getRow();
 
         return $fileMeta;
@@ -758,47 +673,33 @@ class CommonModel
             "data_type"    => "'$dataType'",
         ];
 
-        $sort = [
-            "sort" => "ASC",
-        ];
-
         $rows = $this->database
             ->setDbTable("{$this->entity}_meta")
-            ->getList($select, $filter, null, null, null, $sort)
+            ->skipArgs()
+            ->getList($select, $filter)
+            ->setSorting(["sort" => "ASC"])
             ->getRows();
 
         return new CommonStructure($rows, 'theProperty');
     }
 
     /**
-     * @param string|null $metaCodes
+     * @param array $metaCodes
      *
      * @return array
      */
-    private function getEntityMeta(?string $metaCodes = null): array
+    private function getEntityMeta(array $metaCodes): array
     {
-        $select = [
-            "id",
-            "code",
-        ];
 
-        $filter = null;
+        $joinCodes = "";
 
-        if ($metaCodes) {
-            $filter = [
-                "code" => "() '$metaCodes'",
-            ];
+        foreach ($metaCodes as $key => $value) {
+            $joinCodes .= "'$key',";
         }
 
-        $sort = [
-            "code" => "ASC",
-        ];
+        $joinCodes = trim($joinCodes, ",");
+        $query     = "SELECT id, code FROM {$this->entity}_meta WHERE code IN ($joinCodes) ORDER BY code ASC";
 
-        $entityMeta = $this->database
-            ->setDbTable("{$this->entity}_meta")
-            ->getList($select, $filter, null, null, null, $sort)
-            ->getRows();
-
-        return $entityMeta;
+        return $this->database->customQuery($query)->getRows();
     }
 }

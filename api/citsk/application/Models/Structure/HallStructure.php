@@ -36,7 +36,6 @@ class HallStructure extends Structure
         foreach ($rows as $row) {
             $this->structure[] = [
                 'id'            => (int) $row['id'],
-                'asd'           => $row['asd'],
                 'districtId'    => (int) $row['district_id'],
                 "districtLabel" => $row['district_label'],
                 'stateId'       => (int) $row['state_id'],

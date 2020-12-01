@@ -32,40 +32,17 @@ final class PDOBase
      * @param array|null $args
      * @param bool $isReturnPDO
      *
-     * @return mixed
+     * @return mixed PDOStatement or PDO
      */
-    public function executeQuery(string $query, ?array $args = null, bool $isReturnPDO = false)
+    public function executeQuery(string $query, ?array $args = null, $isReturnPDO = false)
     {
 
         try {
-            $instance = $this->getInstance();
-
-            if (!$args) {
-
-                if ($isReturnPDO) {
-                    return [
-                        'PDO'       => $instance,
-                        'STATEMENT' => $instance->query($query),
-                    ];
-                }
-
-                return $instance->query($query);
-            }
-
+            $instance  = $this->getInstance();
             $statement = $instance->prepare($query);
+            $statement->execute($args);
 
-            if ($statement->execute($args)) {
-
-                if ($isReturnPDO) {
-                    return [
-                        'PDO'       => $instance,
-                        'STATEMENT' => $statement,
-                    ];
-                }
-
-                return $statement;
-            }
-
+            return $isReturnPDO ? $instance : $statement;
         } catch (PDOException $e) {
             if (strripos($e->getMessage(), 'Duplicate entry')) {
                 throw new DataBaseException('Duplicate entry', 102);
@@ -109,13 +86,13 @@ final class PDOBase
     }
 
     /**
-     * @param string $query
+     * @param string|null $query
      * @param int $fetchType
      * @param PDOStatement|null $statement
      *
      * @return mixed
      */
-    public function fetch(string $query, int $fetchType, ?PDOStatement $statement = null)
+    public function fetch(?string $query, int $fetchType, ?PDOStatement $statement = null)
     {
         try {
             return $statement
@@ -127,13 +104,13 @@ final class PDOBase
     }
 
     /**
-     * @param string $query
+     * @param string|null $query
      * @param int $fetchType
      * @param PDOStatement|null $statement
      *
      * @return array|null
      */
-    public function fetchAll(string $query, int $fetchType, ?PDOStatement $statement = null): ?array
+    public function fetchAll(?string $query, int $fetchType, ?PDOStatement $statement = null): ?array
     {
 
         try {
@@ -147,12 +124,12 @@ final class PDOBase
     }
 
     /**
-     * @param string $query
+     * @param string|null $query
      * @param PDOStatement|null $statement
      *
      * @return string|null
      */
-    public function fetchColumn(string $query, ?PDOStatement $statement = null): ?string
+    public function fetchColumn(?string $query, ?PDOStatement $statement = null): ?string
     {
         try {
 

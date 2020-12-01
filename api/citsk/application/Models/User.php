@@ -35,16 +35,12 @@ final class User extends MySQLHelper
         ];
 
         $filter = [
-            "login"      => ":login",
+            "login"      => $login,
             "is_blocked" => 0,
         ];
 
-        $args = [
-            ":login" => $login,
-        ];
-
         $userData = $this->setDbTable("users")
-            ->getList($select, $filter, $args)
+            ->getList($select, $filter)
             ->getRow(5);
 
         return $userData;
@@ -57,35 +53,11 @@ final class User extends MySQLHelper
     {
         $ipAddress = Shared::getIpAdress();
 
-        $fields = [
-            "created"    => "CURRENT_TIMESTAMP()",
-            "user_id"    => $this->identity->userId,
-            "ip_address" => "'$ipAddress'",
-        ];
-
-        $this->setDbTable("connections")->add($fields);
-    }
-
-    /**
-     * @param int $responsibleId
-     *
-     * @return void
-     */
-    public function addUserByResponsibleId(int $responsibleId): void
-    {
         $insert = [
-            "login"          => ":login",
-            "password"       => ":password",
-            "role"           => ":role",
-            "responsible_id" => ":responsibleId",
+            "user_id"    => $this->identity->userId,
+            "ip_address" => $ipAddress,
         ];
 
-        $args = [
-            ":login"         => null,
-            ":password"      => null,
-            ":role"          => null,
-            ":responsibleId" => null,
-        ];
+        $this->setDbTable("connections")->add($insert);
     }
-
 }

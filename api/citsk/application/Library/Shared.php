@@ -2,9 +2,16 @@
 
 namespace Citsk\Library;
 
+use Exception;
+
 final class Shared
 {
 
+    /**
+     * @param bool $includeBraces
+     *
+     * @return string
+     */
     public static function getGUID(bool $includeBraces = false): string
     {
         if (function_exists('com_create_guid')) {
@@ -29,6 +36,17 @@ final class Shared
 
             return $guid;
         }
+    }
+
+    /**
+     * @param mixed string
+     *
+     * @return string
+     */
+    public static function currentTimestamp(string $dateFormat = 'Y-m-d H:i:s'): string
+    {
+
+        return date($dateFormat);
     }
 
     /**
@@ -77,12 +95,24 @@ final class Shared
     public static function toCamelCase(string $stroke): string
     {
 
-        if (!strpos($stroke, '-')) {
+        if (!strpos($stroke, '-') && !strpos($stroke, '_') && !strpos($stroke, ".")) {
             return $stroke;
         }
 
         $result   = null;
-        $tmpArray = explode('-', $stroke);
+        $tmpArray = [];
+
+        if (strpos($stroke, '-')) {
+            $tmpArray = explode('-', $stroke);
+        }
+
+        if (strpos($stroke, '_')) {
+            $tmpArray = explode('_', $stroke);
+        }
+
+        if (strpos($stroke, '.')) {
+            $tmpArray = explode('.', $stroke);
+        }
 
         for ($i = 0; $i < count($tmpArray); $i++) {
             $result .= ($i == 0) ? $tmpArray[$i] : ucfirst($tmpArray[$i]);
@@ -118,21 +148,20 @@ final class Shared
     }
 
     /**
-     * @param string $dir
+     * @param string $directory
      *
      * @return void
      */
-    public static function removeDirectory(string $dir): void
+    public static function removeDirectory(string $directory): void
     {
 
-        $fullPath = $_SERVER['DOCUMENT_ROOT'] . "/uploads/{$dir}";
+        if (is_dir($directory)) {
 
-        if (is_dir($fullPath)) {
-            foreach (glob("$fullPath/*") as $file) {
+            array_walk(glob("$directory/*"), function ($file) {
                 unlink($file);
-            }
+            });
 
-            rmdir($fullPath);
+            rmdir($directory);
         }
     }
 
@@ -153,12 +182,14 @@ final class Shared
 
             if (!in_array($file['type'], ALLOWED_MIME)) {
                 self::removeDirectory($uploadsDirFullPath);
+
                 continue;
             }
 
             foreach (BLACKLIST as $item) {
                 if (preg_match("/$item\$/i", $file['name'])) {
                     self::removeDirectory($uploadsDirFullPath);
+
                     continue;
                 }
             }
@@ -166,8 +197,8 @@ final class Shared
             if ($file['size'] <= 10485760) {
                 $fileHashName   = self::getHashString();
                 $tmpName        = $file['tmp_name'];
-                $extension      = substr(strrchr($file['name'], '.'), 1);
-                $fileName       = "$fileHashName.$extension";
+                $pathInfo       = pathinfo($file['name']);
+                $fileName       = "$fileHashName.{$pathInfo['extension']}";
                 $isFileUploaded = move_uploaded_file($tmpName, "$uploadsDirFullPath/$fileName");
 
                 if ($isFileUploaded) {
@@ -178,6 +209,8 @@ final class Shared
                         'size'          => $file['size'],
                         'type'          => $file['type'],
                     ];
+                } else {
+                    throw new Exception("File not uploaded");
                 }
             }
         }

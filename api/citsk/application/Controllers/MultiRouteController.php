@@ -8,7 +8,6 @@ use Citsk\Interfaces\IController;
 use Citsk\Library\Identity;
 use Citsk\Library\Shared;
 use Citsk\Models\MultiRoute;
-use Exception;
 
 final class MultiRouteController extends Controller implements Controllerable, IController
 {
@@ -59,25 +58,34 @@ final class MultiRouteController extends Controller implements Controllerable, I
      */
     public function add(): void
     {
-        try {
 
-            $routeId = $this->model->addRoute();
+        $addParams = [
+            "district_id"      => $this->user->districtId,
+            "publish_state_id" => $this->user->isManager ? 2 : 1,
+        ];
 
-            $this->model->database->startTransaction();
+        $params = array_merge($this->bindParams(), $addParams);
 
-            $this->model
-                ->addWayPoint($routeId)
-                ->addProperty($routeId);
+        $routeId      = $this->model->addRoute($params);
+        $properties   = $_POST['properties'];
+        $videogallery = $properties['videogallery'] ?? null;
 
-            $this->model
-                ->database
-                ->executeTransaction();
+        $this->model->addWayPoint($routeId, $_POST['waypoints']);
 
-            $this->successResponse(['id' => $routeId]);
-
-        } catch (Exception $e) {
-            $this->errorResponse();
+        if (isset($properties['videogallery'])) {
+            unset($properties['videogallery']);
         }
+
+        if (!empty($properties)) {
+            $this->model->addProperty($routeId, $properties);
+        }
+
+        if ($videogallery) {
+            $this->model->addVideogallery($routeId, $videogallery);
+        }
+
+        $this->successResponse(['id' => $routeId]);
+
     }
 
     /**
@@ -86,24 +94,38 @@ final class MultiRouteController extends Controller implements Controllerable, I
     public function update(): void
     {
 
+        $routeId = $_POST['id'];
+
         $this->model->database->startTransaction();
         $this->model
-            ->updateRoute()
-            ->deleteWaypoint()
-            ->addWayPoint()
-            ->updateProperty()
-            ->database
-            ->executeTransaction();
+            ->updateRoute($routeId, $this->bindParams())
+            ->deleteWaypoint($routeId)
+            ->addWayPoint($routeId, $_POST['waypoints']);
 
+        $properties   = $_POST['properties'];
+        $videogallery = $properties['videogallery'] ?? null;
+
+        if (isset($properties['videogallery'])) {
+            unset($properties['videogallery']);
+        }
+
+        $this->model->updateProperty($routeId, $properties);
+        $this->model->updateVideogallery($routeId, $videogallery);
+
+        $this->model->database->executeTransaction();
         $this->successResponse();
     }
 
     public function remove(): void
     {
 
-        $this->model
-            ->removeFileByEntityId()
-            ->removeItem();
+        if (is_array($_POST['id'])) {
+            array_walk($_POST['id'], function ($id) {
+                $this->removeCallback($id);
+            });
+        } else {
+            $this->removeCallback($_POST['id']);
+        }
 
         $this->successResponse();
     }
@@ -113,10 +135,10 @@ final class MultiRouteController extends Controller implements Controllerable, I
      */
     public function uploadFile(): void
     {
+        $this->checkIsAuthorized();
 
         $fileMeta = Shared::uploadFiles();
-        $this->model->writeFilePathToDatabase($fileMeta);
-
+        $this->model->writeFilePathToDatabase($_POST['id'], $fileMeta, $_POST['propertyCode']);
         $this->successResponse();
     }
 
@@ -125,9 +147,45 @@ final class MultiRouteController extends Controller implements Controllerable, I
      */
     public function detachFile(): void
     {
+        $this->checkIsAuthorized();
 
-        $this->model->removeFileById();
-
+        $this->model->removeFileById($_POST['id']);
         $this->successResponse();
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return void
+     */
+    private function removeCallback(int $id): void
+    {
+
+        if ($this->model->hasFiles($id)) {
+            $this->model->removeFileByEntityId($id);
+        };
+
+        $this->model->removeItem($id);
+
+    }
+
+    /**
+     * @return array
+     */
+    private function bindParams(): array
+    {
+        $coords = $_POST['waypoints'][0]['coordinates'];
+
+        $params = [
+            "label"     => trim($_POST['label']),
+            "mode"      => $_POST['routingMode'],
+            "longitude" => $coords[0],
+            "latitude"  => $coords[1],
+            "duration"  => $_POST['duration'],
+            "distance"  => $_POST['distance'],
+
+        ];
+
+        return $params;
     }
 }

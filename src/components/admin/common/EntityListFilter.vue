@@ -53,7 +53,7 @@
         >
       </transition>
 
-      <transition name="el-fade-in-linear">
+      <transition v-if="isAdmin" name="el-fade-in-linear">
         <el-button
           key="2"
           v-show="unTrashedRows.length"

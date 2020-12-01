@@ -9,6 +9,7 @@ return array(
     'Citsk\\Controllers\\CommonController' => $baseDir . '/citsk/application/Controllers/CommonController.php',
     'Citsk\\Controllers\\Controller' => $baseDir . '/citsk/application/Controllers/Controller.php',
     'Citsk\\Controllers\\DistrictController' => $baseDir . '/citsk/application/Controllers/DistrictController.php',
+    'Citsk\\Controllers\\FileController' => $baseDir . '/citsk/application/Controllers/FileController.php',
     'Citsk\\Controllers\\GeoobjectController' => $baseDir . '/citsk/application/Controllers/GeoobjectController.php',
     'Citsk\\Controllers\\HallController' => $baseDir . '/citsk/application/Controllers/HallController.php',
     'Citsk\\Controllers\\MultiRouteController' => $baseDir . '/citsk/application/Controllers/MultiRouteController.php',

@@ -18,7 +18,7 @@ const errorCollection = {
     },
 
     404: (error) => {
-      onError('Компонент не найден')
+      onError(`Компонент ${error.response.config.url.split('/')[4]} не найден`)
       return Promise.reject({
         error: `${error.response.status} ${error.response.statusText}`,
         code: 404

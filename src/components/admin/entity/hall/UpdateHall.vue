@@ -129,7 +129,7 @@ export default {
         if (!this.hall.properties.videogallery) { delete this.hall.properties.videogallery }
 
         await this.$store.dispatch('hall/update', {
-          route: '/hall/update-hall',
+          route: '/hall/update',
           payload: this.hall
         })
 

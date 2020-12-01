@@ -63,12 +63,12 @@ class Controller
     }
 
     /**
-     * @return bool
+     * @return void
      */
     protected function checkIsItemDraft(): void
     {
         if (isset($_GET['id'])) {
-            if ($this->model->isItemDraft($_GET['id'])) {
+            if ($this->model->isItemDraft($_GET['id']) && !$this->user->isAdmin) {
                 die(http_response_code(404));
             }
         }
@@ -177,7 +177,6 @@ class Controller
         if ($entity == 'route') {
             $entity = 'multiroute';
         }
-
 
         return $entity;
     }

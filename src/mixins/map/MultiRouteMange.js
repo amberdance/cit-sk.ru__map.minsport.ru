@@ -55,12 +55,13 @@ export default {
 
         if (!activeRoute) return
 
-        this.$refs.entityProperties.$data.properties.distance = activeRoute.properties.get(
+        this.$refs.entityProperties.setDistance(activeRoute.properties.get(
           'distance'
-        ).text
-        this.$refs.entityProperties.$data.properties.duration = activeRoute.properties.get(
+        ).text)
+
+        this.$refs.entityProperties.setDuration(activeRoute.properties.get(
           'duration'
-        ).text
+        ).text)
       })
 
       this.yandexMapInstance.controls.add(buttonEditor)

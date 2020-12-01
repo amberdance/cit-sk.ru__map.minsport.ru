@@ -14,7 +14,7 @@
             ? 'textarea'
             : 'text'
         "
-        :disabled="entity == 'routes' ? getDisabled(item.code) : false"
+        :disabled="entity == 'route' ? getDisabled(item.code) : false"
         :rows="5"
       ></el-input>
     </div>
@@ -61,7 +61,6 @@
   </div>
 </template>
 <script>
-import { removeEmptyFields } from '@/utils/common'
 export default {
   props: {
     params: { type: Object, required: true },
@@ -96,25 +95,20 @@ export default {
   },
 
   async created () {
-    await this.getProperties()
+    await this.$store.dispatch(`${this.entity}/loadData`, {
+      route: 'get-properties',
+      state: 'properties'
+    })
 
     this.properties = this.params
   },
 
   methods: {
-    async getProperties () {
-      try {
-        await this.$store.dispatch(`${this.entity}/loadData`, {
-          route: 'get-properties',
-          state: 'properties'
-        })
-      } catch (e) {
-
-      }
-    },
 
     getDisabled (propertyCode) {
-      if (propertyCode === 'duration' || propertyCode === 'distance') return true
+      if (propertyCode === 'duration' || propertyCode === 'distance') {
+        return true
+      }
     },
 
     getUpdateFields () {
@@ -123,21 +117,29 @@ export default {
 
     setUpdateFields () {
       if (this.$route.params.properties.length) {
-        this.$route.params.properties.forEach((item) => {
+        this.$route.params.properties.forEach(item => {
           this.properties[item.code] = item.value
         })
       }
     },
 
     setDefaultValue (property) {
-      if (property.value == null) property.value = ''
+      if (!property.value) property.value = ''
       if (property.value === 0) property.value = 1
 
       return property
     },
 
+    setDistance (value) {
+      this.properties.distance = value
+    },
+
+    setDuration (value) {
+      this.properties.duration = value
+    },
+
     getFields () {
-      return removeEmptyFields(this.properties)
+      return this.properties
     },
 
     resetFields () {

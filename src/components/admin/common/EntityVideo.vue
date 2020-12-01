@@ -101,14 +101,16 @@ export default {
     },
 
     getVideos () {
-      const result = this.videogallery
+      let result = this.videogallery
 
-      this.videogallery.forEach((item) => {
+      this.videogallery.forEach(item => {
         const videoId = getIdFromUrl(item)
         if (videoId) result.push(videoId)
       })
 
-      return result.filter((src) => src.indexOf('https')).length || null
+      result = result.filter(item => (item.indexOf('https')) === -1)
+
+      return result.length ? result : null
     },
 
     resetFields () {

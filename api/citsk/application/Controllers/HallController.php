@@ -49,7 +49,7 @@ final class HallController extends Controller implements Controllerable, IContro
     public function geoLabels(): void
     {
         $payload = $this->model->getGeoLabels();
-        $this->successResponse($payload);
+        $this->dataResponse($payload);
     }
 
     /**
@@ -70,10 +70,12 @@ final class HallController extends Controller implements Controllerable, IContro
     {
 
         $hallId = $this->model->addHall();
-        $this->model->addProperty($hallId);
+
+        if (!empty($_POST['properties'])) {
+            $this->model->addProperty($hallId, $_POST['properties']);
+        }
 
         $this->successResponse(['id' => $hallId]);
-
     }
 
     /**
@@ -81,23 +83,43 @@ final class HallController extends Controller implements Controllerable, IContro
      */
     public function update(): void
     {
+        $hallId       = $_POST['id'];
+        $properties   = $_POST['properties'];
+        $videogallery = $properties['videogallery'] ?? null;
 
-        $this->model->database->startTransaction();
-        $this->model
-            ->updateHall()
-            ->updateProperty()
-            ->database
-            ->executeTransaction();
+        if (isset($properties['videogallery'])) {
+            unset($properties['videogallery']);
+        }
+
+        $params = [
+            "label"  => trim($_POST['label']),
+            "geo_id" => $_POST['geoId'],
+        ];
+
+        $this->model->updateHall($hallId, $params);
+
+        if ($properties) {
+            $this->model->updateProperty($hallId, $properties);
+        }
+
+        $this->model->updateVideogallery($hallId, $videogallery);
 
         $this->successResponse();
     }
 
+    /**
+     * @return void
+     */
     public function remove(): void
     {
 
-        $this->model
-            ->removeFileByEntityId()
-            ->removeItem();
+        if (is_array($_POST['id'])) {
+            array_walk($_POST['id'], function ($id) {
+                $this->removeCallback($id);
+            });
+        } else {
+            $this->removeCallback($_POST['id']);
+        }
 
         $this->successResponse();
     }
@@ -107,10 +129,10 @@ final class HallController extends Controller implements Controllerable, IContro
      */
     public function uploadFile(): void
     {
+        $this->checkIsAuthorized();
 
         $fileMeta = Shared::uploadFiles();
-        $this->model->writeFilePathToDatabase($fileMeta);
-
+        $this->model->writeFilePathToDatabase($_POST['id'], $fileMeta, $_POST['propertyCode']);
         $this->successResponse();
     }
 
@@ -119,9 +141,24 @@ final class HallController extends Controller implements Controllerable, IContro
      */
     public function detachFile(): void
     {
+        $this->checkIsAuthorized();
 
-        $this->model->removeFileById();
-
+        $this->model->removeFileById($_POST['id']);
         $this->successResponse();
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return void
+     */
+    private function removeCallback(int $id): void
+    {
+
+        if ($this->model->hasFiles($id)) {
+            $this->model->removeFileByEntityId($id);
+        };
+
+        $this->model->removeItem($id);
     }
 }

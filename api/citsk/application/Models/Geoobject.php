@@ -1,8 +1,8 @@
 <?php
 namespace Citsk\Models;
 
-use Citsk\Exceptions\DataBaseException;
 use Citsk\Library\GeoFilter;
+use Citsk\Library\Shared;
 use Citsk\Models\Structure\GeoobjectStructure;
 
 final class Geoobject extends CommonModel
@@ -42,7 +42,8 @@ final class Geoobject extends CommonModel
 
         $placemarks = $this->database
             ->setDbTable('geo_items geo')
-            ->getList($select, $filter['filter'], $filter['args'], $filter['join'])
+            ->skipArgs()
+            ->getList($select, $filter['filter'], $filter['join'])
             ->getRows();
 
         foreach ($placemarks as $key => $value) {
@@ -75,7 +76,6 @@ final class Geoobject extends CommonModel
         ];
 
         $filter = null;
-        $args   = null;
 
         $join = [
             "districts district"   => "district.id = gi.district_id",
@@ -83,9 +83,7 @@ final class Geoobject extends CommonModel
         ];
 
         if (isset($_GET['id'])) {
-            $filter["gi.id"] = ":id";
-            $args[":id"]     = $_GET['id'];
-
+            $filter["gi.id"] = $_GET['id'];
         }
 
         if ($this->user->isManager) {
@@ -94,11 +92,11 @@ final class Geoobject extends CommonModel
 
         $result = $this->database
             ->setDbTable("geo_items gi")
-            ->getList($select, $filter, $args, $join)
+            ->getList($select, $filter, $join)
             ->getRows();
 
         foreach ($result as $key => $value) {
-            $geoId = $_GET['id'] ?? $value['id'];
+            $geoId = $_GET['id'] ?? intval($value['id']);
 
             $result[$key]['categories']    = $this->getCategoryById($geoId)->structure;
             $result[$key]['properties']    = $this->getProperties($geoId, null)->structure;
@@ -119,140 +117,89 @@ final class Geoobject extends CommonModel
         $coords = explode(",", $_POST['coords']);
 
         $insert = [
-            "label"            => ":label",
-            "latitude"         => ":latitude",
-            "longitude"        => ":longitude",
+            "label"            => $_POST['label'],
+            "latitude"         => $coords[0],
+            "longitude"        => $coords[1],
             "publish_state_id" => $this->user->isAdmin ? 1 : 2,
             "district_id"      => $this->user->districtId,
         ];
 
         if ($this->user->isAdmin) {
-            $insert['published'] = "CURRENT_TIMESTAMP()";
+            $insert['published'] = Shared::currentTimestamp();
         }
-
-        $args = [
-            "label"     => $_POST['label'],
-            "latitude"  => $coords[0],
-            "longitude" => $coords[1],
-        ];
 
         $geoId = $this->database
             ->setDbTable("geo_items")
-            ->add($insert, $args, true)
+            ->add($insert)
             ->getInsertedId();
-
-        if (!boolval($geoId)) {
-            throw new DataBaseException("Insert failed");
-        }
 
         return $geoId;
     }
 
     /**
-     * @return Geoobject
+     * @param int $id
+     * @param array $params
+     *
+     * @return void
      */
-    public function updateGeoobject(): Geoobject
+    public function updateGeoobject(int $id, array $params): void
     {
 
-        $updates = [
-            "label"     => ":label",
-            "latitude"  => ":latitude",
-            "longitude" => ":longitude",
-        ];
-
-        $filter = [
-            "id" => ":id",
-        ];
-
-        $coords = explode(",", $_POST['coords']);
-
-        $updateArgs = [
-            ":id"        => $_POST['id'],
-            ":label"     => trim($_POST['label']),
-            ":latitude"  => $coords[0],
-            ":longitude" => $coords[1],
-        ];
-
-        $this->database
-            ->setDbTable("geo_items")
-            ->update($updates, $filter, $updateArgs);
-
-        return $this;
+        $this->database->setDbTable("geo_items")->update($params, ["id" => $id]);
     }
 
     /**
-     * @param int|null $id
-     * @param array|null $categoriesToInsert
+     * @param int $id
+     * @param array $categories
      *
      * @return Geoobject
      */
-    public function addCategory(?int $id = null, ?array $categoriesToInsert = null): Geoobject
+    public function addCategory(int $id, array $categories): Geoobject
     {
-
-        if (!$categoriesToInsert && !($_POST['categories'])) {
-            return $this;
-        }
 
         $this->database->setDbTable('category_items');
 
         $insert = [
-            "geo_id"      => ":geoId",
-            "category_id" => ":catId",
-
+            "geo_id" => $id,
         ];
 
-        $args = [
-            ":geoId" => $id ?? $_POST['id'],
-        ];
+        array_walk($categories, function ($categoryId) use ($insert) {
+            $insert["category_id"] = $categoryId;
 
-        $addGeo = function ($id) use ($insert, $args) {
-            $args[':catId'] = $id;
-
-            $this->database->add($insert, $args);
-        };
-
-        $tmp = $categoriesToInsert ?? $_POST['categories'];
-
-        array_walk($tmp, $addGeo);
+            $this->database->add($insert);
+        });
 
         return $this;
     }
 
     /**
-     * @return Geoobject
+     * @param int $id
+     * @param array $categories
+     *
+     * @return void
      */
-    public function updateCategory(): Geoobject
+    public function updateCategory(int $id, array $categories): void
     {
 
-        $select = [
-            "category_id",
-        ];
+        $select = "category_id";
 
         $filter = [
-            "geo_id" => ":id",
-        ];
-
-        $args = [
-            ":id" => $_POST['id'],
+            "geo_id" => $id,
         ];
 
         $currentCategories = $this->database
             ->setDbTable("category_items")
-            ->getList($select, $filter, $args)
+            ->getList($select, $filter)
             ->getRows(7);
 
-        $categoriesToInsert = array_diff($_POST['categories'], $currentCategories);
-        $categoriesToDelete = array_diff($currentCategories, $_POST['categories']);
+        $categoriesToInsert = array_diff($categories, $currentCategories);
+        $categoriesToDelete = array_diff($currentCategories, $categories);
 
         if (empty($categoriesToDelete)) {
-            return $this->addCategory($_POST['id'], $categoriesToInsert);
+            $this->addCategory($_POST['id'], $categoriesToInsert);
+        } elseif (empty($categoriesToInsert)) {
+            $this->deleteCategory($categoriesToDelete);
         }
-
-        if (empty($categoriesToInsert)) {
-            return $this->deleteCategory($categoriesToDelete);
-        }
-
-        return $this;
     }
 
     public function getCategories(): GeoobjectStructure
@@ -285,25 +232,19 @@ final class Geoobject extends CommonModel
     }
 
     /**
-     * @param int|null $id
+     * @param int $id
      *
      * @return Geoobject
      */
-    public function removeHall(?int $id = null): Geoobject
+    public function removeHall(int $id): Geoobject
     {
 
         $this->database->setDbTable("hall_items hi");
 
-        $delete = [
-            "hi, hp, fs",
-        ];
+        $delete = "hi, hp, fs";
 
         $filter = [
-            "hi.geo_id" => ":id",
-        ];
-
-        $args = [
-            ":id" => $id ?? $_POST['id'],
+            "hi.geo_id" => $id,
         ];
 
         $join = [
@@ -311,18 +252,26 @@ final class Geoobject extends CommonModel
             "files fs"         => "fs.id = hp.value",
         ];
 
-        if (is_array($_POST['id'])) {
-            $values              = implode(",", $_POST['id']);
-            $filter["hi.geo_id"] = "()" . $values;
-            $args                = null;
-
-        }
-
-        $this->database
-            ->delete($delete, $filter, $args, $join)
-            ->getRowCount();
+        $this->database->delete($delete, $filter, $join);
 
         return $this;
+    }
+
+    /**
+     * @param int $geoId
+     *
+     * @return bool
+     */
+    public function hasHall(int $geoId): bool
+    {
+
+        $isExists = $this->database
+            ->setDbTable("hall_items")
+            ->getList("id", ['geo_id' => $geoId])
+            ->getRowCount();
+
+        return boolval($isExists);
+
     }
 
     private function getSubCategories(int $id): array
@@ -351,16 +300,12 @@ final class Geoobject extends CommonModel
 
         array_walk($categories, function ($categoryId) {
             $filter = [
-                "category_id" => ":id",
-            ];
-
-            $args = [
-                ":id" => $categoryId,
+                "category_id" => $categoryId,
             ];
 
             $this->database
                 ->setDbTable("category_items")
-                ->delete(null, $filter, $args);
+                ->delete(null, $filter);
         });
 
         return $this;
@@ -373,7 +318,6 @@ final class Geoobject extends CommonModel
      */
     private function getCategoryById(int $id): GeoobjectStructure
     {
-
         $select = [
             "sub.id",
             "sub.label",
@@ -393,7 +337,7 @@ final class Geoobject extends CommonModel
 
         $rows = $this->database
             ->setDbTable('category_items cat')
-            ->getList($select, $filter, null, $join)
+            ->getList($select, $filter, $join)
             ->getRows();
 
         return new GeoobjectStructure($rows, 'theCategory');
@@ -410,8 +354,6 @@ final class Geoobject extends CommonModel
                 'state.id' => 1,
             ],
 
-            'args'   => [],
-
             'join'   => [
                 "publish_states state" => "state.id = geo.publish_state_id",
             ],
@@ -420,16 +362,14 @@ final class Geoobject extends CommonModel
 
         if (isset($_POST['switcher'])) {
             $result['join'] = array_merge($result['join'], $this->getSwitcherValue());
-
         }
 
         if (isset($_POST['slider'])) {
             $result['join'] = array_merge($result['join'], $this->getSliderValue());
-
         }
 
         if (isset($_POST['category'])) {
-            $result['filter']['( cat.category_id'] = $this->getCategoryValue() . " ) ";
+            $result['filter']['( cat.category_id'] = $this->getCategoryValue() . " ) "; // ...statements AND (categoryId = id or categoryId = ...)
             $result['join']["category_items cat "] = "cat.geo_id = geo.id";
         }
 

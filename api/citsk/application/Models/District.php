@@ -2,7 +2,6 @@
 
 namespace Citsk\Models;
 
-use Citsk\Exceptions\DataBaseException;
 use Citsk\Library\MySQLHelper;
 use Citsk\Models\Structure\DistrictStructure;
 
@@ -30,19 +29,15 @@ class District extends MySQLHelper
         ];
 
         $filter = null;
-        $args   = null;
 
         if ($districtId) {
             $filter = [
-                "district_id" => ":id",
+                "district_id" => $districtId,
             ];
 
-            $args = [
-                ":id" => $districtId,
-            ];
         }
 
-        $rows = $this->getList($select, $filter, $args)->getRows();
+        $rows = $this->getList($select, $filter)->getRows();
 
         return new DistrictStructure($rows, "theDistrict");
     }
@@ -54,20 +49,11 @@ class District extends MySQLHelper
     {
 
         $insert = [
-            "label"       => ":label",
-            "regional_id" => ":id",
+            "label"       => $params['label'],
+            "regional_id" => $params['regional_id'] ?? null,
         ];
 
-        $args = [
-            ":label" => "'{$params['label']}'",
-            ":id"    => $params['regional_id'] ?? null,
-        ];
-
-        $districtId = $this->add($insert, $args, true)->getInsertedId();
-
-        if (!$districtId) {
-            throw new DataBaseException("Insert failed");
-        }
+        $districtId = $this->add($insert)->getInsertedId();
 
         return $districtId;
     }
@@ -80,26 +66,15 @@ class District extends MySQLHelper
     public function updateDistrict(array $params): void
     {
         $update = [
-            "label"       => ":label",
-            "regional_id" => ":regionalId",
+            "label"       => $params['label'],
+            "regional_id" => $params['regional_id'] ?? null,
         ];
 
         $filter = [
-            ":id" => $params['id'],
+            "id" => $params['id'],
         ];
 
-        $args = [
-            ":id"         => $params['id'],
-            ":label"      => "'{$params['label']}'",
-            ":regionalId" => $params['regional_id'] ?? null,
-        ];
-
-        $isUpdated = $this->update($update, $filter, $args)->getRowCount();
-
-        if (!boolval($isUpdated)) {
-            throw new DataBaseException("Update failed");
-        }
-
+        $this->update($update, $filter)->getRowCount();
     }
 
     /**
@@ -111,18 +86,11 @@ class District extends MySQLHelper
     {
 
         $filter = [
-            ":id" => $districtId,
+            "id" => $districtId,
         ];
 
-        $args = [
-            "id" => ":id",
-        ];
+        $this->delete(null, $filter)->getRowCount();
 
-        $isDeleted = $this->delete(null, $filter, $args)->getRowCount();
-
-        if (!boolval($isDeleted)) {
-            throw new DataBaseException("Delete failed");
-        }
     }
 
 }

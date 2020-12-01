@@ -33,7 +33,7 @@
 
       <div class="form-item">
         <div class="form-label a-center">Мультимаршрут:</div>
-        <div id="yandex-map" style="width:100%; height:450px;"></div>
+        <div id="yandex-map" style="width:100%; height:550px;"></div>
       </div>
 
       <el-divider />
@@ -77,7 +77,6 @@ export default {
   data () {
     return {
       entity: 'route',
-      multiRoute: {},
       waypoints: [],
       propertiesComponent: null,
 
@@ -99,6 +98,7 @@ export default {
 
   async created () {
     await this.initializeYandexMap()
+
     this.propertiesComponent = () =>
       import('@/components/admin/common/EntityProperties')
   },
@@ -124,7 +124,6 @@ export default {
         })
 
         this.uploadPhotos(data.id)
-
         this.purge()
         this.$onSuccess('Маршрут добавлен')
       } catch (e) {
@@ -139,8 +138,8 @@ export default {
       this.route.label = null
       this.route.waypoints = []
       this.waypoints = []
-      this.multiRoute = {}
-      this.route.properties = {}
+
+      this.multiRoute.model.setReferencePoints([])
       this.$refs.form.resetFields()
       this.$refs.entityProperties.resetFields()
       this.$refs.entityVideo.resetFields()

@@ -127,7 +127,7 @@ export default {
 
         this.clusterer.add(this.placemarksCollection)
         this.yandexMapInstance.geoObjects.add(this.clusterer)
-        this.setPlacemarksEventListeners('routes')
+        this.setPlacemarksEventListeners('route')
 
         this.isRouteModeChanged = true
         this.routeId = null

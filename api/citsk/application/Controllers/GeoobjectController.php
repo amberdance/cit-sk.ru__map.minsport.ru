@@ -49,7 +49,7 @@ final class GeoobjectController extends Controller implements Controllerable, IC
     {
 
         $this->checkIsItemDraft();
-        
+
         $payload = $this->model->getGeoobjects();
         $this->dataResponse($payload);
     }
@@ -60,16 +60,27 @@ final class GeoobjectController extends Controller implements Controllerable, IC
     public function add(): void
     {
 
-        $geoobjectId = $this->model->addGeoobject();
-        $this->model->database->startTransaction();
+        $geoId        = $this->model->addGeoobject();
+        $properties   = $_POST['properties'];
+        $videogallery = $properties['videogallery'] ?? null;
 
-        $this->model
-            ->addCategory($geoobjectId)
-            ->addProperty($geoobjectId);
+        if (isset($properties['videogallery'])) {
+            unset($properties['videogallery']);
+        }
 
-        $this->model->database->executeTransaction();
-        $this->successResponse(['id' => $geoobjectId]);
+        if ($_POST['categories']) {
+            $this->model->addCategory($geoId, $_POST['categories']);
+        }
 
+        if (!empty($properties)) {
+            $this->model->addProperty($geoId, $properties);
+        }
+
+        if ($videogallery) {
+            $this->model->addVideogallery($geoId, $videogallery);
+        }
+
+        $this->successResponse(['id' => $geoId]);
     }
 
     /**
@@ -78,14 +89,33 @@ final class GeoobjectController extends Controller implements Controllerable, IC
     public function update(): void
     {
 
-        $this->model->database->startTransaction();
+        $properties   = $_POST['properties'];
+        $videogallery = $properties['videogallery'] ?? null;
+        $geoId        = $_POST['id'];
 
-        $this->model
-            ->updateGeoobject()
-            ->updateCategory()
-            ->updateProperty();
+        if (isset($properties['videogallery'])) {
+            unset($properties['videogallery']);
+        }
 
-        $this->model->database->executeTransaction();
+        $coords = explode(",", $_POST['coords']);
+        $params = [
+            "label"     => trim($_POST['label']),
+            "latitude"  => $coords[0],
+            "longitude" => $coords[1],
+        ];
+
+        $this->model->updateGeoobject($geoId, $params);
+
+        if ($_POST['categories']) {
+            $this->model->updateCategory($geoId, $_POST['categories']);
+        }
+
+        if ($properties) {
+            $this->model->updateProperty($geoId, $properties);
+        }
+
+        $this->model->updateVideogallery($geoId, $videogallery);
+
         $this->successResponse();
     }
 
@@ -95,10 +125,13 @@ final class GeoobjectController extends Controller implements Controllerable, IC
     public function remove(): void
     {
 
-        $this->model
-            ->removeHall()
-            ->removeFileByEntityId()
-            ->removeItem();
+        if (is_array($_POST['id'])) {
+            array_walk($_POST['id'], function ($id) {
+                $this->removeCallback($id);
+            });
+        } else {
+            $this->removeCallback($_POST['id']);
+        }
 
         $this->successResponse();
     }
@@ -108,9 +141,10 @@ final class GeoobjectController extends Controller implements Controllerable, IC
      */
     public function uploadFile(): void
     {
+        $this->checkIsAuthorized();
 
         $fileMeta = Shared::uploadFiles();
-        $this->model->writeFilePathToDatabase($fileMeta);
+        $this->model->writeFilePathToDatabase($_POST['id'], $fileMeta, $_POST['propertyCode']);
         $this->successResponse();
     }
 
@@ -119,8 +153,29 @@ final class GeoobjectController extends Controller implements Controllerable, IC
      */
     public function detachFile(): void
     {
+        $this->checkIsAuthorized();
 
-        $this->model->removeFileById();
+        $this->model->removeFileById($_POST['id']);
         $this->successResponse();
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return void
+     */
+    private function removeCallback(int $id): void
+    {
+
+        if ($this->model->hasHall($id)) {
+            $this->model->removeHall($id);
+        }
+
+        if ($this->model->hasFiles($id)) {
+            $this->model->removeFileByEntityId($id);
+        };
+
+        $this->model->removeItem($id);
+
     }
 }

@@ -54,6 +54,18 @@
 
           <template slot-scope="{ row }">
             <div class="table-btn-group">
+                <el-button
+                size="mini"
+                @click="
+                  $router.push({
+                    name: 'updateGeo',
+                    params: row,
+                    query: { id: row.id }
+                  })
+                "
+                >редактировать</el-button
+              >
+
               <el-button
                 v-if="isAdmin && row.stateId !== 1"
                 size="mini"
@@ -62,23 +74,12 @@
                   updatePublishState({
                     stateId: 1,
                     stateLabel: 'опубликовано',
-                    rows: row,
+                    rows: row
                   })
                 "
                 >опубликовать</el-button
               >
 
-              <el-button
-                size="mini"
-                @click="
-                  $router.push({
-                    name: 'updateGeo',
-                    params: row,
-                    query: { id: row.id },
-                  })
-                "
-                >редактировать</el-button
-              >
             </div>
           </template>
         </el-table-column>
@@ -134,7 +135,7 @@ export default {
     },
 
     dataTable () {
-      return this.displayedGeoobjects.filter((item) => {
+      return this.displayedGeoobjects.filter(item => {
         return (
           !this.search ||
           item.label.toLowerCase().includes(this.search.toLowerCase()) ||
@@ -152,8 +153,10 @@ export default {
         route: 'get-list'
       })
 
-      this.filterComponent = () =>
-        import('@/components/admin/common/EntityListFilter')
+      if (this.geoobjects.length) {
+        this.filterComponent = () =>
+          import('@/components/admin/common/EntityListFilter')
+      }
     } catch (e) {
       return
     } finally {

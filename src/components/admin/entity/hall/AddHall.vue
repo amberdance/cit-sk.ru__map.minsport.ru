@@ -95,9 +95,7 @@ export default {
         this.hall.properties = this.$refs.entityProperties.getFields()
         this.hall.properties.videogallery = this.$refs.entityVideo.getVideos()
 
-        if (!this.hall.properties.videogallery) {
-          delete this.hall.properties.videogallery
-        }
+        if (!this.hall.properties.videogallery) { delete this.hall.properties.videogallery }
 
         const { data } = await this.$HTTPPost({
           route: '/hall/add',

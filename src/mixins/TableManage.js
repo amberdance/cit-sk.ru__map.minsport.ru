@@ -23,12 +23,17 @@ export default {
     },
 
     async removeItem () {
-      await this.warningNotice(this.multipleSelection.length)
+      await this.warningNotice(
+        this.multipleSelection.length,
+        10,
+        `Вы собираетесь удалить ${this.multipleSelection.length} строк. Это может занять более длительный промежуток времени, чем обычно, Вы уверены ?`,
+        'удаляем !'
+      )
 
       try {
         this.$isLoading()
 
-        const removedRows = this.multipleSelection.map((item) => item.id)
+        const removedRows = this.multipleSelection.map(item => item.id)
 
         await this.$store.dispatch(`${this.entity}/remove`, {
           entity: this.entity,
@@ -53,12 +58,12 @@ export default {
         await this.warningNotice(
           rows.length,
           10,
-          'Это может занять некоторое время'
+          'Это может занять некоторое время, прошу набраться терпения терпения'
         )
 
         if (!Array.isArray(rows)) rows = [rows]
 
-        const mappedRows = rows.map((item) => item.id)
+        const mappedRows = rows.map(item => item.id)
 
         await this.$store.dispatch(`${this.entity}/updatePublishState`, {
           payload: {
@@ -81,17 +86,20 @@ export default {
     async warningNotice (
       initialLength,
       permittedLength = 5,
-      text = 'Действие необратимо, вы уверены ?'
+      text = 'Действие необратимо, вы уверены ?',
+      confirmButtonText = 'да',
+      cancelButtonText = 'надо подумать'
     ) {
-      if (initialLength > permittedLength) {
+      if (initialLength >= permittedLength) {
         try {
           await this.$confirm(text, {
-            confirmButtonText: 'да',
-            cancelButtonText: 'надо подумать',
+            confirmButtonText,
+            cancelButtonText,
             type: 'warning'
           })
         } catch (e) {
           this.$refs.dataTable.clearSelection()
+
           return Promise.reject('cancelled')
         }
       }

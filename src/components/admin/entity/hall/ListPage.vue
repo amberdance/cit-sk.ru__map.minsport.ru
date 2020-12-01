@@ -67,6 +67,17 @@
             <template slot-scope="{ row }">
               <div class="table-btn-group">
                 <el-button
+                  size="mini"
+                  @click="
+                    $router.push({
+                      name: 'updateHall',
+                      params: row,
+                      query: { id: row.id }
+                    })
+                  "
+                  >редактировать</el-button
+                >
+                <el-button
                   v-if="isAdmin && row.stateId !== 1"
                   size="mini"
                   type="primary"
@@ -74,22 +85,10 @@
                     updatePublishState({
                       stateId: 1,
                       stateLabel: 'опубликовано',
-                      rows: row,
+                      rows: row
                     })
                   "
                   >опубликовать</el-button
-                >
-
-                <el-button
-                  size="mini"
-                  @click="
-                    $router.push({
-                      name: 'updateHall',
-                      params: row,
-                      query: { id: row.id },
-                    })
-                  "
-                  >редактировать</el-button
                 >
               </div>
             </template>
@@ -146,7 +145,7 @@ export default {
     },
 
     dataTable () {
-      return this.displayedHalls.filter((row) => {
+      return this.displayedHalls.filter(row => {
         return (
           !this.search ||
           row.created.toLowerCase().includes(this.search.toLowerCase()) ||
@@ -164,8 +163,10 @@ export default {
         route: 'get-list'
       })
 
-      this.filterComponent = () =>
-        import('@/components/admin/common/EntityListFilter')
+      if (this.halls.length) {
+        this.filterComponent = () =>
+          import('@/components/admin/common/EntityListFilter')
+      }
     } catch (e) {
       return
     } finally {
